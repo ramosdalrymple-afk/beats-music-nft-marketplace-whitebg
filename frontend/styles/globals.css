@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Font Stack - Clean, modern sans-serif */
+html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+* {
+  @apply border-dark-secondary;
+}
+
+body {
+  @apply bg-dark-base text-white;
+  background: linear-gradient(135deg, #0a0e27 0%, #141829 50%, #0f1a35 100%);
+}
+
+button {
+  @apply transition-all duration-200;
+}
+
+input,
+textarea {
+  @apply focus:outline-none;
+}
+
+/* Brand Colors */
+.text-purple {
+  @apply text-brand-purple;
+}
+
+.text-cyan {
+  @apply text-brand-cyan;
+}
+
+.text-orange {
+  @apply text-brand-orange;
+}
+
+/* Neon glow effects */
+.glow-purple {
+  @apply shadow-neon-purple;
+}
+
+.glow-cyan {
+  @apply shadow-neon-cyan;
+}
+
+.glow-orange {
+  @apply shadow-neon-orange;
+}
+
+.glow-brand {
+  @apply shadow-brand;
+}
+
+/* Border effects */
+.border-purple {
+  @apply border border-brand-purple;
+}
+
+.border-cyan {
+  @apply border border-brand-cyan;
+}
+
+.border-orange {
+  @apply border border-brand-orange;
+}
+
+/* Neon text gradient */
+.neon-text-glow {
+  @apply text-transparent bg-clip-text bg-gradient-brand;
+}
+
+/* Glassmorphism - Dark Mode */
+.glass {
+  @apply bg-white/5 backdrop-blur-md border border-white/10;
+}
+
+.glass-dark {
+  @apply bg-black/20 backdrop-blur-xl border border-brand-purple/20;
+}
+
+.glass-hover {
+  @apply glass-dark hover:border-brand-purple/40 transition-colors;
+}
+
+/* Music visualizer animation */
+@keyframes bar-animate {
+  0%,
+  100% {
+    height: 20%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+.bar {
+  animation: bar-animate 0.6s ease-in-out infinite;
+}
+
+.bar:nth-child(1) {
+  animation-delay: 0s;
+}
+.bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.bar:nth-child(4) {
+  animation-delay: 0.6s;
+}
+.bar:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.bar:nth-child(6) {
+  animation-delay: 0.4s;
+}
+.bar:nth-child(7) {
+  animation-delay: 0.6s;
+}
+.bar:nth-child(8) {
+  animation-delay: 0.2s;
+}
+.bar:nth-child(9) {
+  animation-delay: 0.4s;
+}
+.bar:nth-child(10) {
+  animation-delay: 0.6s;
+}
+.bar:nth-child(11) {
+  animation-delay: 0.2s;
+}
+.bar:nth-child(12) {
+  animation-delay: 0.4s;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 14, 39, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #a855f7, #06b6d4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #06b6d4, #ff6b35);
+}
