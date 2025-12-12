@@ -57,8 +57,9 @@ export default function BeatsTap() {
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-6 h-6 text-brand-orange animate-pulse" />
-            <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Listen to Earn</h1>
+            {/* <Zap className="w-6 h-6 text-brand-orange animate-pulse" /> */}
+            {/* <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Listen to Earn</h1> */}
+          <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Listen to Earn</h1>
           </div>
           <p className="text-lg text-slate-300">
             Beats Music is a Blockchain music were Holders can use their NFT’s to earn $SOUL Token. (TBA)

@@ -205,10 +205,10 @@ export default function Home() {
 
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { name: 'Faceless West', emoji: '👻', image: '/character/faceless-west.png' },
-                  { name: 'A$AP Mercy', emoji: '💰', image: '/character/asap-mercy.png' },
-                  { name: 'Luna Sonic', emoji: '🌙', image: '/character/luna-sonic.png' },
-                  { name: 'Neon Cipher', emoji: '⚡', image: '/character/neon-cipher.png' },
+                  { name: 'Velvet Distortion', emoji: '👻', image: '/characters/velvet-distortion.png' },
+                  { name: 'Midnight Reverb', emoji: '💰', image: '/characters/midnight-reverb.png' },
+                  { name: 'Static in Paradise', emoji: '🌙', image: '/characters/static-in-paradise.png' },
+                  { name: 'Echoes of Chrome', emoji: '⚡', image: '/characters/echoes-of-chrome.png' },
                 ].map((char, idx) => (
                   <div
                     key={idx}
