@@ -1,10 +1,9 @@
 // pages/marketplace.tsx
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { Music, Search, AlertCircle, RefreshCw, Tag, ShoppingCart } from 'lucide-react';
+import { Music, Search, AlertCircle, RefreshCw, Wallet, ShoppingCart, X } from 'lucide-react';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit';
-import BuyForm from '../components/BuyForm';
-import SellForm from '../components/SellForm';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 // Use your existing package ID
 const PACKAGE_ID = '0x08ac46b00eb814de6e803b7abb60b42abbaf49712314f4ed188f4fea6d4ce3ec';
@@ -23,19 +22,9 @@ export default function Marketplace() {
   const [success, setSuccess] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
   const [selectedListing, setSelectedListing] = useState<any>(null);
-  const [showBuyForm, setShowBuyForm] = useState(false);
-  const [showSellForm, setShowSellForm] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [buyLoading, setBuyLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-
-  // Sell Form State
-  const [itemToList, setItemToList] = useState('');
-  const [askPrice, setAskPrice] = useState('');
-  const [itemType, setItemType] = useState('');
-
-  // Buy Form State
-  const [itemIdToBuy, setItemIdToBuy] = useState('');
-  const [buyItemType, setBuyItemType] = useState('');
-  const [buyAmount, setBuyAmount] = useState('');
 
   useEffect(() => {
     fetchAllListings();
@@ -183,6 +172,63 @@ export default function Marketplace() {
     }
   };
 
+  const handleBuyNFT = async () => {
+    if (!selectedListing || !account) {
+      setError('Please connect wallet');
+      return;
+    }
+
+    setBuyLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const amountInMist = Number(selectedListing.askPrice);
+
+      const tx = new TransactionBlock();
+      const [coin] = tx.splitCoins(tx.gas, [tx.pure(amountInMist)]);
+      
+      tx.moveCall({
+        target: `${PACKAGE_ID}::marketplace::buy_and_take`,
+        typeArguments: [selectedListing.itemType, COIN_TYPE],
+        arguments: [
+          tx.object(MARKETPLACE_ID),
+          tx.pure(selectedListing.itemId),
+          coin,
+        ],
+      });
+
+      signAndExecuteTransaction(
+        {
+          transactionBlock: tx,
+          options: {
+            showEffects: true,
+            showObjectChanges: true,
+          },
+        },
+        {
+          onSuccess: (result: any) => {
+            console.log('Buy transaction successful:', result);
+            setSuccess(`Item purchased successfully! Digest: ${result.digest}`);
+            setShowBuyModal(false);
+            setSelectedListing(null);
+            setBuyLoading(false);
+            fetchAllListings();
+          },
+          onError: (error: any) => {
+            console.error('Buy transaction error:', error);
+            setError(error.message || 'Failed to purchase item');
+            setBuyLoading(false);
+          },
+        }
+      );
+    } catch (err: any) {
+      console.error('Buy function error:', err);
+      setError(err.message || 'Failed to purchase item');
+      setBuyLoading(false);
+    }
+  };
+
   const formatSui = (mist: any) => (Number(mist) / 1_000_000_000).toFixed(4);
   const truncateAddress = (addr: string) => addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
 
@@ -296,219 +342,163 @@ export default function Marketplace() {
           )}
         </div>
 
-        {/* Buy Form Modal */}
-        {showBuyForm && (
-          <div className="glass-dark rounded-lg p-6 border border-green-600/30">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-green-400">Buy NFT</h2>
-              <button
-                onClick={() => setShowBuyForm(false)}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-              </button>
+        {/* Success Modal */}
+        {success && (
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={() => setSuccess('')}
+          >
+            <div 
+              className="glass-dark border border-brand-purple/50 rounded-2xl p-8 max-w-md w-full animate-scale-in shadow-2xl shadow-brand-purple/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center border border-green-500/50">
+                  <span className="text-4xl">✓</span>
+                </div>
+                <h3 className="text-2xl font-bold text-green-400">Purchase Successful!</h3>
+                <p className="text-slate-300">{success}</p>
+                <button
+                  onClick={() => setSuccess('')}
+                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 mt-4"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <BuyForm  
-              account={account}
-              loading={loading}
-              setLoading={setLoading}
-              setError={setError}
-              setSuccess={setSuccess}
-              signAndExecuteTransaction={signAndExecuteTransaction}
-              fetchMarketplaceData={fetchAllListings}
-              packageId={PACKAGE_ID}
-              marketplaceId={MARKETPLACE_ID}
-              coinType={COIN_TYPE}
-              itemIdToBuy={itemIdToBuy}
-              setItemIdToBuy={setItemIdToBuy}
-              buyItemType={buyItemType}
-              setBuyItemType={setBuyItemType}
-              buyAmount={buyAmount}
-              setBuyAmount={setBuyAmount}
-            />
-          </div>
-        )}
-
-        {/* Sell Form Modal */}
-        {showSellForm && (
-          <div className="glass-dark rounded-lg p-6 border border-brand-purple/30">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-brand-purple">List NFT for Sale</h2>
-              <button
-                onClick={() => setShowSellForm(false)}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <SellForm
-              account={account}
-              loading={loading}
-              setLoading={setLoading}
-              setError={setError}
-              setSuccess={setSuccess}
-              signAndExecuteTransaction={signAndExecuteTransaction}
-              fetchMarketplaceData={fetchAllListings}
-              packageId={PACKAGE_ID}
-              marketplaceId={MARKETPLACE_ID}
-              coinType={COIN_TYPE}
-              itemToList={itemToList}
-              setItemToList={setItemToList}
-              askPrice={askPrice}
-              setAskPrice={setAskPrice}
-              itemType={itemType}
-              setItemType={setItemType}
-            />
           </div>
         )}
 
         {/* Main Content - Active Listings */}
         <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
-
-          {success && (
-            <div 
-              className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
-              onClick={() => setSuccess('')}
-            >
-              <div 
-                className="glass-dark border border-brand-purple/50 rounded-2xl p-8 max-w-md w-full animate-scale-in shadow-2xl shadow-brand-purple/30"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-16 h-16 bg-brand-purple/30 rounded-full flex items-center justify-center border border-brand-purple/50">
-                    <span className="text-4xl">✓</span>
-                  </div>
-                  <h3 className="text-2xl font-bold neon-text-glow">Success!</h3>
-                  <p className="text-slate-300">{success}</p>
+          {!account ? (
+            <div className="text-center py-16">
+              <Wallet className="w-16 h-16 text-brand-purple mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
+              <p className="text-slate-400">Please connect your wallet to view and purchase NFTs</p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Active Listings</h2>
                   <button
-                    onClick={() => setSuccess('')}
-                    className="w-full px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-brand-purple/50 mt-4"
+                    onClick={fetchAllListings}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    Close
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span className="text-sm font-semibold">{loading ? 'Loading...' : 'Refresh'}</span>
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* Active Listings Section */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Active Listings</h2>
-              <button
-                onClick={fetchAllListings}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-sm font-semibold">{loading ? 'Loading...' : 'Refresh'}</span>
-              </button>
-            </div>
-
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name, ID, or description..."
-                  className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
-                />
-              </div>
-            </div>
-
-            {/* Listings Grid */}
-            {loading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-slate-400">Loading listings...</p>
-              </div>
-            ) : filteredListings.length === 0 ? (
-              <div className="glass-dark rounded-lg p-12 border border-brand-purple/20 text-center space-y-4">
-                <Music className="w-16 h-16 mx-auto text-brand-purple/50" />
-                <p className="text-slate-400 text-lg">
-                  {searchTerm ? 'No listings match your search.' : 'No active listings yet'}
-                </p>
-                <p className="text-slate-500">
-                  {searchTerm ? 'Try a different search term.' : 'Check back later for new music NFTs'}
-                </p>
-              </div>
-            ) : (
-              <div>
-                <div className="mb-4 text-sm text-slate-400">
-                  Showing {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'}
+                {/* Search Bar */}
+                <div className="mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search by name, ID, or description..."
+                      className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
+                    />
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredListings.map((listing) => (
-                    <div
-                      key={listing.itemId}
-                      className="glass-dark backdrop-blur-sm border border-brand-purple/30 rounded-xl p-5 hover:border-brand-purple/60 transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-brand-purple/20 hover:-translate-y-1"
-                      onClick={() => setSelectedListing(listing)}
-                    >
-                      {/* Image Container */}
-                      <div className="flex justify-center mb-4">
-                        <div className="relative w-full max-w-[200px] h-[200px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
-                          {listing.imageUrl && listing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
-                            <img
-                              src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `https://${listing.imageUrl}`}
-                              alt={listing.name}
-                              className="w-full h-full object-contain"
-                              style={{ maxWidth: '100%', maxHeight: '200px' }}
-                              onError={(e: any) => {
-                                e.target.style.display = 'none';
-                                const parent = e.target.parentElement;
-                                if (parent) {
-                                  parent.innerHTML = '<div class="flex flex-col items-center justify-center w-full h-full text-brand-purple"><div class="text-6xl mb-2">🎵</div><div class="text-sm text-slate-400">Image Failed</div></div>';
-                                }
-                              }}
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center w-full h-full text-brand-purple">
-                              <div className="text-6xl mb-2">🎵</div>
-                              <div className="text-sm text-slate-400">Music NFT</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* NFT Info */}
-                      <div className="text-center">
-                        <h3 className="text-white font-bold text-lg mb-2 truncate">{listing.name}</h3>
-                        
-                        <p className="text-slate-400 text-xs mb-2">
-                          <strong>Item ID:</strong> {listing.itemId.slice(0, 16)}...
-                        </p>
-                        
-                        <p className="text-brand-purple font-bold text-xl mb-2 neon-text-glow">
-                          {formatSui(listing.askPrice)} SUI
-                        </p>
-                        
-                        <p className="text-slate-500 text-xs mb-3 line-clamp-2">
-                          {listing.description}
-                        </p>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedListing(listing);
-                          }}
-                          className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
-                        >
-                          Buy Music NFT
-                        </button>
-                      </div>
+                {/* Listings Grid */}
+                {loading ? (
+                  <div className="text-center py-16">
+                    <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-400">Loading listings...</p>
+                  </div>
+                ) : filteredListings.length === 0 ? (
+                  <div className="glass-dark rounded-lg p-12 border border-brand-purple/20 text-center space-y-4">
+                    <Music className="w-16 h-16 mx-auto text-brand-purple/50" />
+                    <p className="text-slate-400 text-lg">
+                      {searchTerm ? 'No listings match your search.' : 'No active listings yet'}
+                    </p>
+                    <p className="text-slate-500">
+                      {searchTerm ? 'Try a different search term.' : 'Check back later for new music NFTs'}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-4 text-sm text-slate-400">
+                      Showing {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'}
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filteredListings.map((listing) => (
+                        <div
+                          key={listing.itemId}
+                          onClick={() => setSelectedListing(listing)}
+                          className="glass-dark backdrop-blur-sm border border-brand-purple/30 rounded-xl p-5 hover:border-brand-purple/60 transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-brand-purple/20 hover:-translate-y-1"
+                        >
+                          {/* Image Container */}
+                          <div className="flex justify-center mb-4">
+                            <div className="relative w-full max-w-[200px] h-[200px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
+                              {listing.imageUrl && listing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                                <img
+                                  src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `https://${listing.imageUrl}`}
+                                  alt={listing.name}
+                                  className="w-full h-full object-contain"
+                                  style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                  onError={(e: any) => {
+                                    e.target.style.display = 'none';
+                                    const parent = e.target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = '<div class="flex flex-col items-center justify-center w-full h-full text-brand-purple"><div class="text-6xl mb-2">🎵</div><div class="text-sm text-slate-400">Image Failed</div></div>';
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="flex flex-col items-center justify-center w-full h-full text-brand-purple">
+                                  <div className="text-6xl mb-2">🎵</div>
+                                  <div className="text-sm text-slate-400">Music NFT</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* NFT Info */}
+                          <div className="text-center">
+                            <h3 className="text-white font-bold text-lg mb-2 truncate">{listing.name}</h3>
+                            
+                            <p className="text-slate-400 text-xs mb-2">
+                              <strong>Item ID:</strong> {listing.itemId.slice(0, 16)}...
+                            </p>
+                            
+                            <p className="text-brand-purple font-bold text-xl mb-2 neon-text-glow">
+                              {formatSui(listing.askPrice)} SUI
+                            </p>
+                            
+                            <p className="text-slate-500 text-xs mb-3 line-clamp-2">
+                              {listing.description}
+                            </p>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedListing(listing);
+                              }}
+                              className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
         {/* NFT Detail Modal */}
-        {selectedListing && (
+        {selectedListing && !showBuyModal && (
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedListing(null)}
@@ -591,17 +581,123 @@ export default function Marketplace() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    setItemIdToBuy(selectedListing.itemId);
-                    setBuyItemType(selectedListing.itemType);
-                    setBuyAmount(formatSui(selectedListing.askPrice));
-                    setShowBuyForm(true);
-                    setSelectedListing(null);
-                  }}
+                  onClick={() => setShowBuyModal(true)}
                   className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 mt-4"
                 >
-                  🛒 Buy This Item
+                  <ShoppingCart className="w-5 h-5" />
+                  Buy This Item
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Buy Confirmation Modal */}
+        {showBuyModal && selectedListing && (
+          <div 
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => {
+              setShowBuyModal(false);
+              setError('');
+            }}
+          >
+            <div 
+              className="glass-dark border border-green-500/30 rounded-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-400 mb-1">Buy NFT</h2>
+                  <p className="text-slate-400 text-sm">Confirm your purchase</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowBuyModal(false);
+                    setError('');
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* NFT Preview */}
+              <div className="glass-dark rounded-lg p-4 border border-green-500/20 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-green-500/30 flex-shrink-0">
+                    {selectedListing.imageUrl && selectedListing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                      <img
+                        src={selectedListing.imageUrl.startsWith('http') ? selectedListing.imageUrl : `https://${selectedListing.imageUrl}`}
+                        alt={selectedListing.name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-3xl">🎵</div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-bold truncate">{selectedListing.name}</h3>
+                    <p className="text-slate-400 text-xs truncate">{selectedListing.itemId}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Display */}
+              <div className="space-y-4">
+                <div className="glass-dark rounded-lg p-4 border border-green-500/20">
+                  <p className="text-slate-400 text-sm mb-2">Purchase Price</p>
+                  <p className="text-green-400 font-bold text-3xl">
+                    {formatSui(selectedListing.askPrice)} SUI
+                  </p>
+                  <p className="text-slate-500 text-xs mt-2">
+                    ≈ {Number(selectedListing.askPrice).toLocaleString()} MIST
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="glass-dark rounded-lg p-3 border border-red-500/30">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="glass-dark rounded-lg p-3 border border-yellow-500/30 bg-yellow-500/10">
+                  <p className="text-yellow-400 text-xs">
+                    <strong>Note:</strong> This transaction will transfer the NFT to your wallet and deduct the purchase price from your balance.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowBuyModal(false);
+                      setError('');
+                    }}
+                    className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                    disabled={buyLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBuyNFT}
+                    disabled={buyLoading}
+                    className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {buyLoading ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Buying...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        Confirm Purchase
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
