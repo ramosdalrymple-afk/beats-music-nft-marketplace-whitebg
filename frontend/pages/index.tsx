@@ -9,38 +9,38 @@ export default function Home() {
     { label: 'Marketplace Volume', value: '$2.3M', change: '+45%' },
   ];
 
-  const features = [
-    {
-      icon: Music,
-      title: 'Listen to Earn',
-      description: 'Earn BEATS tokens while listening to exclusive music from Soul Collection artists.',
-    },
-    {
-      icon: Zap,
-      title: 'Lightning Fast',
-      description: 'Trade beats instantly on Sui blockchain with minimal gas fees.',
-    },
-    {
-      icon: Users,
-      title: 'Artist Community',
-      description: 'Direct connection between artists and collectors. No middlemen.',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Track Value',
-      description: 'Real-time price charts and analytics for informed trading decisions.',
-    },
-    {
-      icon: Lock,
-      title: 'Secure Trading',
-      description: 'Blockchain-verified ownership with complete transparency.',
-    },
-    {
-      icon: Gift,
-      title: 'Exclusive Drops',
-      description: 'Limited edition releases from Soul Collection characters.',
-    },
-  ];
+  // const features = [
+  //   {
+  //     icon: Music,
+  //     title: 'Listen to Earn',
+  //     description: 'Earn BEATS tokens while listening to exclusive music from Soul Collection artists.',
+  //   },
+  //   {
+  //     icon: Zap,
+  //     title: 'Lightning Fast',
+  //     description: 'Trade beats instantly on Sui blockchain with minimal gas fees.',
+  //   },
+  //   {
+  //     icon: Users,
+  //     title: 'Artist Community',
+  //     description: 'Direct connection between artists and collectors. No middlemen.',
+  //   },
+  //   {
+  //     icon: TrendingUp,
+  //     title: 'Track Value',
+  //     description: 'Real-time price charts and analytics for informed trading decisions.',
+  //   },
+  //   {
+  //     icon: Lock,
+  //     title: 'Secure Trading',
+  //     description: 'Blockchain-verified ownership with complete transparency.',
+  //   },
+  //   {
+  //     icon: Gift,
+  //     title: 'Exclusive Drops',
+  //     description: 'Limited edition releases from Soul Collection characters.',
+  //   },
+  // ];
 
   return (
     <>
@@ -53,7 +53,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-dark-base text-white">
+      <main className="min-h-screen text-white" style={{
+        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/home-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}>
         {/* Hero Section */}
         <section className="relative px-4 py-20 overflow-hidden sm:px-6 lg:px-8">
           {/* Background gradient orbs */}
@@ -64,10 +69,15 @@ export default function Home() {
 
           <div className="relative z-10 max-w-6xl mx-auto text-center">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-brand-purple via-brand-cyan to-brand-purple bg-clip-text text-transparent">
-              Listen to Earn
+              About Us
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Discover exclusive music NFTs from Soul Collection artists. Trade beats, earn rewards, build your collection.
+              Beats is an interactive NFT Art Fair with a 
+              unique collection of 4,444. The project is a 
+              combination of NFT with staking of NFT’s 
+              and Play to Earn mechanics. The Beats 
+              exhibits Soul Collection of famous and 
+              legendary artists around the world. 
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -107,7 +117,27 @@ export default function Home() {
             Why <span className="text-brand-purple">Beats</span>?
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto"> */}
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-7xl mx-auto">
+              NFTs has brought an exciting era to the crypto world. 
+              2021 is the year when NFTs became the mainstream. 
+              It has federated the world of art and crypto. 
+              But to make it even more exciting, we are not just 
+              sticking to the traditional NFT art fairs.  We all know 
+              that music has the power to connect people. Our NFT 
+              is a unique way for people to create connections not 
+              only between fans and musicians, but also to attract 
+              community that are willing to support artists, 
+              musicians and gamers. It is an innovative experience 
+              where artists can showcase their unique creations 
+              and fans to enjoy and get the assets that are worth 
+              the value. Both users are able to access the more 
+              exciting ways to maximize their digital earnings like 
+              Beats, play-to-earn games and earning from 
+              listening to music. 
+            </p>
+
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, idx) => {
               const Icon = feature.icon;
               return (
@@ -123,7 +153,7 @@ export default function Home() {
                 </div>
               );
             })}
-          </div>
+          </div> */}
         </section>
 
         {/* Collection Highlight */}
@@ -133,13 +163,24 @@ export default function Home() {
               <div>
                 <p className="text-brand-cyan font-semibold mb-2">SOUL COLLECTION</p>
                 <h2 className="text-4xl font-bold mb-6">
-                  Meet the <span className="text-brand-orange">Characters</span>
+                  Beats <span className="text-brand-orange">NFTs</span>
                 </h2>
                 <p className="text-gray-300 mb-6 text-lg">
-                  Explore music from iconic Soul Collection characters. Each artist brings their unique sound and personality to Beats.
+                  Beats NFTs – Soul Collection – are inspired 
+                  by different kinds of music genre, featuring 
+                  the legendary musicians around the world 
+                  to pay tributes to their contribution to the 
+                  music industry. With the Beats NFTs comes 
+                  with $SOUL Token. The team has been 
+                  working endlessly and looking forward to 
+                  the development of the Musicverse. 
                 </p>
 
-                <div className="space-y-4 mb-8">
+                <h3 className="text-2xl font-bold mb-6">
+                  Be ready. <span className="text-brand-orange">This is wild!!!</span>
+                </h3>
+
+                {/* <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-brand-purple rounded-full"></div>
                     <p className="text-gray-300">6 Unique Artists with exclusive beats</p>
@@ -152,7 +193,7 @@ export default function Home() {
                     <div className="w-2 h-2 bg-brand-orange rounded-full"></div>
                     <p className="text-gray-300">Direct revenue share with artists</p>
                   </div>
-                </div>
+                </div> */}
 
                 <Link
                   href="/gallery"
@@ -164,19 +205,27 @@ export default function Home() {
 
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { name: 'Faceless West', emoji: '👻' },
-                  { name: 'A$AP Mercy', emoji: '💰' },
-                  { name: 'Luna Sonic', emoji: '🌙' },
-                  { name: 'Neon Cipher', emoji: '⚡' },
+                  { name: 'Faceless West', emoji: '👻', image: '/character/faceless-west.png' },
+                  { name: 'A$AP Mercy', emoji: '💰', image: '/character/asap-mercy.png' },
+                  { name: 'Luna Sonic', emoji: '🌙', image: '/character/luna-sonic.png' },
+                  { name: 'Neon Cipher', emoji: '⚡', image: '/character/neon-cipher.png' },
                 ].map((char, idx) => (
                   <div
                     key={idx}
-                    className="aspect-square glass-dark rounded-lg border border-brand-cyan/30 hover:border-brand-cyan/60 transition-all flex flex-col items-center justify-center p-4 hover:shadow-neon-cyan group cursor-pointer"
+                    className="aspect-square glass-dark rounded-lg border border-brand-cyan/30 hover:border-brand-cyan/60 transition-all overflow-hidden group cursor-pointer hover:shadow-neon-cyan hover:-translate-y-2"
+                    style={{
+                      backgroundImage: `url(${char.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
                   >
-                    <div className="text-5xl mb-2 group-hover:scale-125 transition-transform">
-                      {char.emoji}
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-base via-transparent to-transparent opacity-60" />
+                    
+                    {/* Content */}
+                    <div className="h-full flex flex-col items-center justify-end p-4 relative z-10">
+                      <p className="text-sm font-semibold text-center text-white">{char.name}</p>
                     </div>
-                    <p className="text-sm font-semibold text-center text-gray-300">{char.name}</p>
                   </div>
                 ))}
               </div>
@@ -189,7 +238,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto bg-gradient-to-r from-brand-purple/20 to-brand-cyan/20 border border-brand-purple/40 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-bold mb-4">Ready to Start Earning?</h2>
             <p className="text-gray-300 mb-8 text-lg">
-              Join thousands of listeners earning BEATS tokens while enjoying exclusive music from Soul Collection.
+              Join thousands of listeners earning $SOUL Token  while enjoying exclusive music from Soul Collection.
             </p>
 
             <Link

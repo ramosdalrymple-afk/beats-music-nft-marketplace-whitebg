@@ -5,6 +5,7 @@ interface Character {
   id: string;
   name: string;
   emoji: string;
+  image?: string;
   color: string;
   borderColor: string;
   description: string;
@@ -15,6 +16,7 @@ const characters: Character[] = [
     id: 'faceless-west',
     name: 'Faceless West',
     emoji: '👻',
+    image: '/character/faceless-west.png',
     color: 'from-slate-600 to-slate-800',
     borderColor: 'border-slate-500',
     description: 'A mysterious producer with untold stories',
@@ -23,6 +25,7 @@ const characters: Character[] = [
     id: 'asap-mercy',
     name: 'A$AP Mercy',
     emoji: '💰',
+    image: '/character/asap-mercy.png',
     color: 'from-amber-600 to-orange-800',
     borderColor: 'border-amber-500',
     description: 'The golden touch of hip-hop beats',
@@ -31,6 +34,7 @@ const characters: Character[] = [
     id: 'luna-sonic',
     name: 'Luna Sonic',
     emoji: '🌙',
+    image: '/character/luna-sonic.png',
     color: 'from-purple-600 to-indigo-800',
     borderColor: 'border-purple-500',
     description: 'Nocturnal beats that inspire dreams',
@@ -39,6 +43,7 @@ const characters: Character[] = [
     id: 'neon-cipher',
     name: 'Neon Cipher',
     emoji: '⚡',
+    image: '/character/neon-cipher.png',
     color: 'from-cyan-600 to-blue-800',
     borderColor: 'border-cyan-500',
     description: 'Digital sounds for the future',
@@ -47,6 +52,7 @@ const characters: Character[] = [
     id: 'crimson-pulse',
     name: 'Crimson Pulse',
     emoji: '❤️',
+    image: '/character/crimson-pulse.png',
     color: 'from-red-600 to-pink-800',
     borderColor: 'border-red-500',
     description: 'Raw emotion in every rhythm',
@@ -55,6 +61,7 @@ const characters: Character[] = [
     id: 'echo-verse',
     name: 'Echo Verse',
     emoji: '🎵',
+    image: '/character/echo-verse.png',
     color: 'from-emerald-600 to-green-800',
     borderColor: 'border-emerald-500',
     description: 'Melodic waves that resonate souls',
@@ -69,7 +76,13 @@ export default function Gallery() {
         <meta name="description" content="Explore the Soul Collection characters and their unique beats" />
       </Head>
 
-      <div className="space-y-8">
+      <div className="min-h-screen text-white space-y-8" style={{
+        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/gallery.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        padding: '2rem'
+      }}>
         {/* Header */}
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Soul Collection</h1>
@@ -87,15 +100,22 @@ export default function Gallery() {
               className="group glass-hover rounded-xl overflow-hidden border border-brand-purple/30 hover:border-brand-purple/60 transition"
             >
               {/* Character Artwork */}
-              <div className={`h-64 bg-gradient-to-br ${character.color} relative overflow-hidden`}>
+              <div 
+                className={`h-64 bg-gradient-to-br ${character.color} relative overflow-hidden transition-all duration-300 group-hover:shadow-brand group-hover:-translate-y-2`}
+                style={character.image ? {
+                  backgroundImage: `linear-gradient(135deg, rgba(10, 14, 39, 0.3) 0%, rgba(20, 24, 41, 0.3) 100%), url(${character.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                } : {}}
+              >
                 {/* Glow Effect */}
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-base to-transparent opacity-50" />
 
                 {/* Character Display */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-8xl mb-4 drop-shadow-lg">{character.emoji}</div>
-                    <p className="text-white/80 font-semibold text-sm">{character.name}</p>
+                    {!character.image && <div className="text-8xl mb-4 drop-shadow-lg">{character.emoji}</div>}
+                    <p className="text-white/80 font-semibold text-sm drop-shadow-lg">{character.name}</p>
                   </div>
                 </div>
 

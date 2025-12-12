@@ -8,6 +8,7 @@ interface BeatSession {
   beatTitle: string;
   artist: string;
   emoji: string;
+  image: string;
 }
 
 const beatSessions: BeatSession[] = [
@@ -16,18 +17,21 @@ const beatSessions: BeatSession[] = [
     beatTitle: 'Lost Whispers',
     artist: 'Faceless West',
     emoji: '👻',
+    image: '/character/faceless-west.png',
   },
   {
     character: 'A$AP Mercy',
     beatTitle: 'Golden Hour',
     artist: 'A$AP Mercy',
     emoji: '💰',
+    image: '/character/asap-mercy.png',
   },
   {
     character: 'Luna Sonic',
     beatTitle: 'Moonlit Dreams',
     artist: 'Luna Sonic',
     emoji: '🌙',
+    image: '/character/luna-sonic.png',
   },
 ];
 
@@ -43,15 +47,21 @@ export default function BeatsTap() {
         <meta name="description" content="Earn SUI by listening to amazing music" />
       </Head>
 
-      <div className="space-y-8">
+      <div className="min-h-screen text-white space-y-8" style={{
+        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/beats-tap-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        padding: '2rem'
+      }}>
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-6 h-6 text-brand-orange animate-pulse" />
-            <h1 className="text-4xl md:text-5xl font-black">Listen to Earn</h1>
+            <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Listen to Earn</h1>
           </div>
           <p className="text-lg text-slate-300">
-            Enjoy premium beats from the Soul Collection and earn SUI while you listen
+            Beats Music is a Blockchain music were Holders can use their NFT’s to earn $SOUL Token. (TBA)
           </p>
         </div>
 
@@ -154,15 +164,29 @@ export default function BeatsTap() {
               <button
                 key={index}
                 onClick={() => setSelectedBeat(beat)}
-                className={`p-4 rounded-lg transition border ${
+                className={`p-4 rounded-lg transition-all duration-300 border overflow-hidden relative group hover:shadow-brand hover:-translate-y-2 ${
                   selectedBeat.character === beat.character
-                    ? 'bg-gradient-brand border-brand-purple/50 shadow-brand text-white'
-                    : 'glass-dark border-brand-purple/20 hover:border-brand-purple/50 text-slate-300 hover:text-white'
+                    ? 'border-brand-purple/50 shadow-brand'
+                    : 'border-brand-purple/20 hover:border-brand-purple/50'
                 }`}
+                style={{
+                  backgroundImage: `url(${beat.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
               >
-                <div className="text-4xl mb-2">{beat.emoji}</div>
-                <h3 className="font-bold mb-1">{beat.character}</h3>
-                <p className="text-sm opacity-75">{beat.beatTitle}</p>
+                {/* Dark overlay */}
+                <div className={`absolute inset-0 transition ${
+                  selectedBeat.character === beat.character
+                    ? 'bg-gradient-to-t from-dark-base via-dark-base/50 to-transparent'
+                    : 'bg-gradient-to-t from-dark-base via-dark-base/70 to-transparent'
+                }`} />
+                
+                {/* Content */}
+                <div className="relative z-10">
+                  <h3 className="font-bold mb-1 text-white">{beat.character}</h3>
+                  <p className="text-sm opacity-75 text-gray-300">{beat.beatTitle}</p>
+                </div>
               </button>
             ))}
           </div>
@@ -176,27 +200,39 @@ export default function BeatsTap() {
               <div className="w-10 h-10 bg-brand-purple rounded-full flex items-center justify-center font-black mb-2">
                 1
               </div>
-              <h3 className="font-bold">Listen</h3>
+              <h3 className="font-bold">$SOUL Token</h3>
               <p className="text-slate-400 text-sm">
-                Play beats from the Soul Collection and enjoy premium audio quality
+                $SOUL Token will be used to create, power 
+                and sustain the Beats ecosystem.
+                To this end the team has created a 
+                tokenomics model that ensures enough 
+                token liquidity at each stage of project 
+                development as well as healthy token 
+                release rate compensated by a built-in 
+                token burn mechanism.
               </p>
             </div>
             <div className="space-y-2">
               <div className="w-10 h-10 bg-brand-orange rounded-full flex items-center justify-center font-black mb-2">
                 2
               </div>
-              <h3 className="font-bold">Earn</h3>
+              <h3 className="font-bold">Currency:</h3>
               <p className="text-slate-400 text-sm">
-                Accumulate SUI rewards based on listening time and boosts
+                $SOUL Token will serve as the basic currency 
+                for Beats Marketplace. 
               </p>
             </div>
             <div className="space-y-2">
               <div className="w-10 h-10 bg-brand-cyan rounded-full flex items-center justify-center font-black mb-2">
                 3
               </div>
-              <h3 className="font-bold">Claim</h3>
+              <h3 className="font-bold">Premium Services</h3>
               <p className="text-slate-400 text-sm">
-                Withdraw your earnings to your wallet anytime
+                $SOUL Token will be the ticket to accessing a 
+                range of other In-app and cloud services as 
+                development continues. Will also be used in 
+                purchasing Merch, event ticket, auctions and 
+                more!
               </p>
             </div>
           </div>
