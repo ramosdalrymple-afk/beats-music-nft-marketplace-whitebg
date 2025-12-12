@@ -355,7 +355,7 @@ export default function BeatsMusic() {
           padding: '1.5rem',
         }}
       >
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="space-y-1">
             <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-brand-purple via-brand-cyan to-brand-orange bg-clip-text text-transparent">
@@ -367,18 +367,18 @@ export default function BeatsMusic() {
           </div>
 
           {!account ? (
-            <div className="glass-dark rounded-2xl border border-brand-purple/30 p-12 text-center space-y-4">
+            <div className="rounded-2xl border border-brand-purple/20 backdrop-blur-md bg-slate-900/40 p-12 text-center space-y-4">
               <Wallet className="w-16 h-16 text-brand-purple mx-auto" />
               <h3 className="text-xl font-bold text-white">Connect Your Wallet</h3>
               <p className="text-slate-400">Please connect your wallet to access your music NFT collection</p>
             </div>
           ) : loading ? (
-            <div className="glass-dark rounded-2xl border border-brand-purple/30 p-12 text-center space-y-4">
+            <div className="rounded-2xl border border-brand-purple/20 backdrop-blur-md bg-slate-900/40 p-12 text-center space-y-4">
               <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto"></div>
               <p className="text-slate-400">Loading your music collection...</p>
             </div>
           ) : error && tracks.length === 0 ? (
-            <div className="glass-dark rounded-2xl border border-brand-purple/30 p-12 text-center space-y-4">
+            <div className="rounded-2xl border border-brand-purple/20 backdrop-blur-md bg-slate-900/40 p-12 text-center space-y-4">
               <AlertCircle className="w-16 h-16 text-brand-purple/50 mx-auto" />
               <h3 className="text-xl font-bold text-white">No Music NFTs Found</h3>
               <p className="text-slate-400">{error}</p>
@@ -392,73 +392,206 @@ export default function BeatsMusic() {
             </div>
           ) : (
             <>
-              {/* Main Player */}
+              {/* Main Player - Horizontal Layout like the image */}
               {currentTrack && (
-                <div className="glass-dark rounded-2xl border border-brand-purple/30 overflow-hidden shadow-2xl">
-                  {/* Album Art Section */}
-                  <div className={`bg-gradient-to-br ${currentTrack.color} p-3 md:p-4 relative overflow-hidden`}>
-                    {/* Animated background glow */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-base to-transparent opacity-40" />
-                    <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${currentTrack.color}`} />
-
-                    {/* Album Display */}
-                    <div className="relative z-10 flex justify-center items-center h-32 md:h-40">
-                      <div
-                        className={`relative w-40 h-40 md:w-52 md:h-52 rounded-2xl shadow-2xl ${isPlaying ? 'animate-spin' : ''}`}
-                        style={{
-                          animationDuration: '6s',
-                          animationPlayState: isPlaying ? 'running' : 'paused',
-                        }}
-                      >
-                        {currentTrack.imageUrl && currentTrack.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
-                          <img
-                            src={currentTrack.imageUrl.startsWith('http') ? currentTrack.imageUrl : `https://${currentTrack.imageUrl}`}
-                            alt={currentTrack.title}
-                            className="w-full h-full rounded-2xl object-cover"
-                            onError={(e: any) => {
-                              e.target.style.display = 'none';
-                              const parent = e.target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-2xl flex items-center justify-center"><svg class="w-20 h-20 md:w-32 md:h-32 text-white opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="10"></line></svg></div><div class="absolute inset-2 rounded-2xl border border-white/20"></div>`;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <>
-                            <div className={`w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-2xl flex items-center justify-center`}>
-                              <Disc3 className="w-20 h-20 md:w-32 md:h-32 text-white opacity-40" />
+                <div className="rounded-2xl border border-brand-purple/20 overflow-hidden shadow-2xl backdrop-blur-md bg-slate-900/40">
+                  <div className="grid md:grid-cols-2 gap-0">
+                    {/* Left Side - Album Art and Info */}
+                    <div className={`bg-gradient-to-br ${currentTrack.color} p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px]`}>
+                      {/* Background decorations */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-dark-base/40 to-transparent" />
+                      <div className={`absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-30 bg-gradient-to-br ${currentTrack.color}`} />
+                      
+                      {/* Album Art */}
+                      <div className="relative z-10 flex-1 flex items-center justify-center">
+                        <div className="relative w-64 h-64 rounded-2xl shadow-2xl border-4 border-white/20">
+                          {currentTrack.imageUrl && currentTrack.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                            <img
+                              src={currentTrack.imageUrl.startsWith('http') ? currentTrack.imageUrl : `https://${currentTrack.imageUrl}`}
+                              alt={currentTrack.title}
+                              className="w-full h-full rounded-xl object-cover"
+                              onError={(e: any) => {
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-xl flex items-center justify-center"><svg class="w-32 h-32 text-white opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="10"></line></svg></div>`;
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-xl flex items-center justify-center`}>
+                              <Disc3 className="w-32 h-32 text-white opacity-40" />
                             </div>
-                            <div className="absolute inset-2 rounded-2xl border border-white/20" />
-                          </>
-                        )}
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Album Info */}
+                      <div className="relative z-10 space-y-2">
+                        <h2 className="text-3xl font-black uppercase tracking-tight">{currentTrack.album}</h2>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span key={star} className="text-yellow-400 text-xl">★</span>
+                          ))}
+                          <span className="ml-2 text-lg font-bold">5.0</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Side - Track List */}
+                    <div className="bg-slate-900/60 backdrop-blur-xl p-8 flex flex-col">
+                      {/* Header */}
+                      <div className="mb-6 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm uppercase tracking-wider text-brand-cyan font-bold">Now Playing</h3>
+                          <h2 className="text-2xl font-black uppercase">{currentTrack.album}</h2>
+                        </div>
+                        <button
+                          onClick={fetchUserNFTs}
+                          disabled={loading}
+                          className="p-2 hover:bg-brand-purple/20 rounded-lg transition"
+                        >
+                          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                        </button>
+                      </div>
+
+                      {/* Track List */}
+                      <div className="flex-1 overflow-y-auto space-y-3 pr-2" style={{ maxHeight: '320px' }}>
+                        {tracks.map((track, index) => (
+                          <button
+                            key={track.id}
+                            onClick={() => {
+                              setCurrentTrackIndex(index);
+                              setProgress(0);
+                              setIsPlaying(true);
+                            }}
+                            className={`w-full p-5 rounded-xl border-2 transition text-left ${
+                              index === currentTrackIndex
+                                ? 'border-brand-cyan bg-brand-cyan/10 shadow-lg shadow-brand-cyan/20'
+                                : 'border-transparent bg-slate-800/30 hover:border-brand-cyan/50 hover:bg-slate-800/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <span className="text-lg font-bold text-brand-cyan w-6">{index + 1}.</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-base uppercase truncate tracking-wide">{track.title}</p>
+                                <p className="text-xs text-slate-400 uppercase truncate">{track.artist}</p>
+                              </div>
+                              {liked.has(track.id) && (
+                                <Heart className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0" />
+                              )}
+                              {index === currentTrackIndex && isPlaying && (
+                                <div className="flex gap-1">
+                                  <div className="w-1 h-4 bg-brand-cyan rounded-full animate-pulse" />
+                                  <div className="w-1 h-4 bg-brand-cyan rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
+                                  <div className="w-1 h-4 bg-brand-cyan rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Track Info and Controls */}
-                  <div className="p-6 md:p-8 space-y-6">
-                    {/* Track Details */}
-                    <div className="space-y-1">
-                      <div>
-                        <h2 className="text-xl md:text-2xl font-black mb-1">{currentTrack.title}</h2>
-                        <p className="text-sm text-brand-cyan">{currentTrack.artist}</p>
-                        <p className="text-slate-400 text-xs mt-1">{currentTrack.album}</p>
+                  {/* Bottom Controls Bar */}
+                  <div className="bg-slate-900/70 backdrop-blur-xl border-t border-brand-purple/20 p-8">
+                    <div className="flex items-center gap-8">
+                      {/* Current Track Thumbnail */}
+                      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-brand-cyan/30">
+                        {currentTrack.imageUrl && currentTrack.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                          <img
+                            src={currentTrack.imageUrl.startsWith('http') ? currentTrack.imageUrl : `https://${currentTrack.imageUrl}`}
+                            alt={currentTrack.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="w-6 h-6 text-brand-cyan" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Track Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg uppercase truncate">{currentTrack.title}</h3>
+                        <p className="text-sm text-brand-cyan uppercase truncate">{currentTrack.artist}</p>
+                      </div>
+
+                      {/* Main Controls */}
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={handlePreviousTrack}
+                          className="text-brand-cyan hover:text-brand-cyan/80 transition"
+                          title="Previous track"
+                        >
+                          <SkipBack className="w-7 h-7 fill-current" />
+                        </button>
+
+                        <button
+                          onClick={handlePlayPause}
+                          className="w-14 h-14 rounded-full bg-brand-cyan hover:bg-brand-cyan/80 transition transform hover:scale-105 flex items-center justify-center"
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-7 h-7 text-dark-base fill-dark-base" />
+                          ) : (
+                            <Play className="w-7 h-7 text-dark-base fill-dark-base ml-1" />
+                          )}
+                        </button>
+
+                        <button
+                          onClick={handleNextTrack}
+                          className="text-brand-cyan hover:text-brand-cyan/80 transition"
+                          title="Next track"
+                        >
+                          <SkipForward className="w-7 h-7 fill-current" />
+                        </button>
+                      </div>
+
+                      {/* Additional Controls */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={toggleLike}
+                          className={`transition ${
+                            liked.has(currentTrack.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-400'
+                          }`}
+                          title="Like track"
+                        >
+                          <Heart className={`w-6 h-6 ${liked.has(currentTrack.id) ? 'fill-red-500' : ''}`} />
+                        </button>
+
+                        <button className="text-brand-cyan hover:text-brand-cyan/80 transition">
+                          <div className="flex flex-col gap-1">
+                            <div className="w-6 h-0.5 bg-current" />
+                            <div className="w-6 h-0.5 bg-current" />
+                            <div className="w-6 h-0.5 bg-current" />
+                          </div>
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={toggleMute}
+                            className="text-brand-cyan hover:text-brand-cyan/80 transition"
+                          >
+                            {isMuted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="space-y-2">
+                    <div className="mt-6 space-y-2">
                       <input
                         type="range"
                         min="0"
                         max={currentTrack.duration || 100}
                         value={progress}
                         onChange={handleProgressChange}
-                        className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-brand-purple"
+                        className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
                         style={{
                           background: `linear-gradient(to right, 
-                            rgb(168, 85, 247) 0%, 
-                            rgb(168, 85, 247) ${progressPercent}%, 
+                            rgb(6, 182, 212) 0%, 
+                            rgb(6, 182, 212) ${progressPercent}%, 
                             rgb(51, 65, 85) ${progressPercent}%, 
                             rgb(51, 65, 85) 100%)`,
                         }}
@@ -468,149 +601,6 @@ export default function BeatsMusic() {
                         <span>{formatTime(currentTrack.duration)}</span>
                       </div>
                     </div>
-
-                    {/* Main Controls */}
-                    <div className="flex justify-center items-center gap-3">
-                      <button
-                        onClick={handlePreviousTrack}
-                        className="p-2 rounded-full hover:bg-brand-purple/20 transition hover:text-brand-purple"
-                        title="Previous track"
-                      >
-                        <SkipBack className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={handlePlayPause}
-                        className="p-3 rounded-full bg-gradient-to-r from-brand-purple to-brand-cyan hover:shadow-brand transition transform hover:scale-105"
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-6 h-6 text-white fill-white" />
-                        ) : (
-                          <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-                        )}
-                      </button>
-
-                      <button
-                        onClick={handleNextTrack}
-                        className="p-2 rounded-full hover:bg-brand-purple/20 transition hover:text-brand-purple"
-                        title="Next track"
-                      >
-                        <SkipForward className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={toggleLike}
-                        className={`p-2 rounded-full transition ${
-                          liked.has(currentTrack.id) ? 'text-red-500 bg-red-500/20' : 'hover:bg-brand-purple/20 hover:text-red-400'
-                        }`}
-                        title="Like track"
-                      >
-                        <Heart className={`w-4 h-4 ${liked.has(currentTrack.id) ? 'fill-red-500' : ''}`} />
-                      </button>
-                    </div>
-
-                    {/* Volume Control */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={toggleMute}
-                        className={`p-1.5 rounded-lg transition ${isMuted ? 'text-red-400 bg-red-500/20' : 'hover:bg-brand-purple/20'}`}
-                      >
-                        {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                      </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={isMuted ? 0 : volume}
-                        onChange={handleVolumeChange}
-                        className="flex-1 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-brand-cyan"
-                        style={{
-                          background: `linear-gradient(to right, 
-                            rgb(6, 182, 212) 0%, 
-                            rgb(6, 182, 212) ${isMuted ? 0 : volume}%, 
-                            rgb(51, 65, 85) ${isMuted ? 0 : volume}%, 
-                            rgb(51, 65, 85) 100%)`,
-                        }}
-                      />
-                      <span className="text-xs text-slate-400 w-6">{isMuted ? 0 : volume}%</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Playlist */}
-              {tracks.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold">Now Playing</h3>
-                    <button
-                      onClick={fetchUserNFTs}
-                      disabled={loading}
-                      className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg font-semibold transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                      {loading ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                  </div>
-                  <div className="grid gap-2">
-                    {tracks.map((track, index) => (
-                      <button
-                        key={track.id}
-                        onClick={() => {
-                          setCurrentTrackIndex(index);
-                          setProgress(0);
-                          setIsPlaying(true);
-                        }}
-                        className={`p-2 rounded-lg border transition text-left ${
-                          index === currentTrackIndex
-                            ? 'glass-dark border-brand-purple/50 bg-brand-purple/10 shadow-brand'
-                            : 'glass-dark border-brand-purple/20 hover:border-brand-purple/50 hover:bg-brand-purple/5'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {/* NFT Image Thumbnail */}
-                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800">
-                            {track.imageUrl && track.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
-                              <img
-                                src={track.imageUrl.startsWith('http') ? track.imageUrl : `https://${track.imageUrl}`}
-                                alt={track.title}
-                                className="w-full h-full object-cover"
-                                onError={(e: any) => {
-                                  e.target.style.display = 'none';
-                                  const parent = e.target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-brand-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>';
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Music className="w-5 h-5 text-brand-purple" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-sm truncate">{track.title}</p>
-                              {liked.has(track.id) && (
-                                <Heart className="w-3 h-3 text-red-500 fill-red-500 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-400 truncate">{track.artist}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-xs text-slate-400">{formatTime(track.duration)}</span>
-                            {index === currentTrackIndex && isPlaying && (
-                              <div className="flex gap-1">
-                                <div className="w-1 h-4 bg-brand-purple rounded-full animate-pulse" />
-                                <div className="w-1 h-4 bg-brand-purple rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
-                                <div className="w-1 h-4 bg-brand-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
                   </div>
                 </div>
               )}
