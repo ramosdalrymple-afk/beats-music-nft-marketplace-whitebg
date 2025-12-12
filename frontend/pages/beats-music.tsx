@@ -30,7 +30,7 @@ export default function BeatsMusic() {
   const [isMuted, setIsMuted] = useState(false);
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [trackDurations, setTrackDurations] = useState<{[key: string]: number}>({});
 
   const currentTrack = tracks[currentTrackIndex];
 
@@ -46,14 +46,43 @@ export default function BeatsMusic() {
     'from-indigo-600 to-purple-600',
   ];
 
+  // Load favorites from localStorage on mount
+  useEffect(() => {
+    if (account) {
+      const savedFavorites = localStorage.getItem(`beats_favorites_${account.address}`);
+      if (savedFavorites) {
+        setLiked(new Set(JSON.parse(savedFavorites)));
+      }
+    }
+  }, [account]);
+
+  // Save favorites to localStorage whenever they change
+  useEffect(() => {
+    if (account) {
+      if (liked.size > 0) {
+        localStorage.setItem(`beats_favorites_${account.address}`, JSON.stringify(Array.from(liked)));
+      } else {
+        localStorage.removeItem(`beats_favorites_${account.address}`);
+      }
+    }
+  }, [liked, account]);
+
   useEffect(() => {
     if (account) {
       fetchUserNFTs();
     } else {
       setTracks([]);
+      setLiked(new Set());
       setError('Please connect your wallet to access your music NFTs');
     }
   }, [client, account]);
+
+  // Sort tracks with favorites first
+  const sortTracksByFavorites = (tracksToSort: Track[]) => {
+    const favorites = tracksToSort.filter(t => liked.has(t.id));
+    const nonFavorites = tracksToSort.filter(t => !liked.has(t.id));
+    return [...favorites, ...nonFavorites];
+  };
 
   const fetchUserNFTs = async () => {
     if (!client || !account) return;
@@ -85,7 +114,7 @@ export default function BeatsMusic() {
                 id: objData.objectId,
                 title: nftContent.name || 'Unknown Track',
                 artist: nftContent.creator ? `${nftContent.creator.slice(0, 6)}...${nftContent.creator.slice(-4)}` : 'Unknown Artist',
-                duration: 180, // Default duration, will be updated when audio loads
+                duration: trackDurations[objData.objectId] || 0, // Use cached duration or 0
                 album: nftContent.attributes || 'Beats Collection',
                 color: colors[musicNFTs.length % colors.length],
                 musicUrl: nftContent.music_url.startsWith('http') ? nftContent.music_url : `https://${nftContent.music_url}`,
@@ -102,7 +131,12 @@ export default function BeatsMusic() {
         setError('No music NFTs found in your wallet. Mint or purchase music NFTs to start listening!');
       }
 
-      setTracks(musicNFTs);
+      // Sort tracks: favorites first, then regular tracks
+      const sortedTracks = sortTracksByFavorites(musicNFTs);
+      setTracks(sortedTracks);
+
+      // Preload durations for all tracks
+      preloadTrackDurations(musicNFTs);
       
     } catch (err: any) {
       console.error('Error fetching NFTs:', err);
@@ -110,6 +144,38 @@ export default function BeatsMusic() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Preload all track durations
+  const preloadTrackDurations = (tracksToLoad: Track[]) => {
+    tracksToLoad.forEach(track => {
+      // Skip if we already have the duration
+      if (trackDurations[track.id]) return;
+
+      const audio = new Audio();
+      audio.src = track.musicUrl;
+      
+      audio.addEventListener('loadedmetadata', () => {
+        const duration = Math.floor(audio.duration);
+        if (!isNaN(duration) && duration > 0) {
+          setTrackDurations(prev => ({
+            ...prev,
+            [track.id]: duration
+          }));
+          
+          // Update tracks array with new duration
+          setTracks(currentTracks => 
+            currentTracks.map(t => 
+              t.id === track.id ? { ...t, duration } : t
+            )
+          );
+        }
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error('Error loading audio metadata for', track.title, e);
+      });
+    });
   };
 
   // Audio element management
@@ -161,10 +227,21 @@ export default function BeatsMusic() {
 
     const handleLoadedMetadata = () => {
       if (currentTrack) {
-        // Update duration when audio loads
-        const newTracks = [...tracks];
-        newTracks[currentTrackIndex].duration = Math.floor(audio.duration);
-        setTracks(newTracks);
+        const duration = Math.floor(audio.duration);
+        if (!isNaN(duration) && duration > 0) {
+          // Update duration in cache
+          setTrackDurations(prev => ({
+            ...prev,
+            [currentTrack.id]: duration
+          }));
+          
+          // Update current track duration
+          setTracks(currentTracks => 
+            currentTracks.map(t => 
+              t.id === currentTrack.id ? { ...t, duration } : t
+            )
+          );
+        }
       }
     };
 
@@ -181,7 +258,7 @@ export default function BeatsMusic() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentTrackIndex, tracks]);
+  }, [currentTrackIndex, currentTrack]);
 
   const handlePlayPause = () => {
     if (!currentTrack) return;
@@ -236,16 +313,26 @@ export default function BeatsMusic() {
       newLiked.add(currentTrack.id);
     }
     setLiked(newLiked);
+    
+    // Re-sort tracks after liking/unliking
+    const sortedTracks = sortTracksByFavorites(tracks);
+    setTracks(sortedTracks);
+    
+    // Find the new index of current track after sorting
+    const newIndex = sortedTracks.findIndex(t => t.id === currentTrack.id);
+    if (newIndex !== -1) {
+      setCurrentTrackIndex(newIndex);
+    }
   };
 
   const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '0:00';
+    if (isNaN(seconds) || seconds === 0) return '--:--';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercent = currentTrack ? (progress / currentTrack.duration) * 100 : 0;
+  const progressPercent = currentTrack && currentTrack.duration > 0 ? (progress / currentTrack.duration) * 100 : 0;
 
   return (
     <>
@@ -255,7 +342,7 @@ export default function BeatsMusic() {
       </Head>
 
       {/* Hidden audio element */}
-      <audio ref={audioRef} />
+      <audio ref={audioRef} preload="metadata" />
 
       <div
         className="min-h-screen text-white"
@@ -364,7 +451,7 @@ export default function BeatsMusic() {
                       <input
                         type="range"
                         min="0"
-                        max={currentTrack.duration}
+                        max={currentTrack.duration || 100}
                         value={progress}
                         onChange={handleProgressChange}
                         className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-brand-purple"
@@ -481,11 +568,34 @@ export default function BeatsMusic() {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg bg-gradient-to-br ${track.color}`}>
-                            <Music className="w-4 h-4 text-white" />
+                          {/* NFT Image Thumbnail */}
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800">
+                            {track.imageUrl && track.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                              <img
+                                src={track.imageUrl.startsWith('http') ? track.imageUrl : `https://${track.imageUrl}`}
+                                alt={track.title}
+                                className="w-full h-full object-cover"
+                                onError={(e: any) => {
+                                  e.target.style.display = 'none';
+                                  const parent = e.target.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-brand-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>';
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Music className="w-5 h-5 text-brand-purple" />
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm truncate">{track.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-sm truncate">{track.title}</p>
+                              {liked.has(track.id) && (
+                                <Heart className="w-3 h-3 text-red-500 fill-red-500 flex-shrink-0" />
+                              )}
+                            </div>
                             <p className="text-xs text-slate-400 truncate">{track.artist}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
