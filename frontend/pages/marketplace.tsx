@@ -484,7 +484,7 @@ export default function Marketplace() {
                               }}
                               className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
                             >
-                              View Details
+                              Buy NFT
                             </button>
                           </div>
                         </div>
