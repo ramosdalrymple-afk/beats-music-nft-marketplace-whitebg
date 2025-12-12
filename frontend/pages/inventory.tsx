@@ -1,15 +1,19 @@
 // pages/inventory.tsx
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { Package, Search, AlertCircle, RefreshCw, Wallet } from 'lucide-react';
-import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { Package, Search, AlertCircle, RefreshCw, Wallet, Tag, X } from 'lucide-react';
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 // Use your existing package ID
 const PACKAGE_ID = '0x08ac46b00eb814de6e803b7abb60b42abbaf49712314f4ed188f4fea6d4ce3ec';
+const MARKETPLACE_ID = '0xb9aa59546415a92290e60ad5d90a9d0b013da1b3daa046aba44a0be113a83b84';
+const COIN_TYPE = '0x2::sui::SUI';
 
 export default function Inventory() {
   const account = useCurrentAccount();
   const client = useSuiClient();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransactionBlock();
   
   const [nfts, setNfts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +21,9 @@ export default function Inventory() {
   const [error, setError] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
   const [selectedNFT, setSelectedNFT] = useState<any>(null);
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [sellPrice, setSellPrice] = useState('');
+  const [sellLoading, setSellLoading] = useState(false);
 
   useEffect(() => {
     if (account) {
@@ -90,6 +97,61 @@ export default function Inventory() {
       setDebugInfo(`Error: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSellNFT = async () => {
+    if (!selectedNFT || !sellPrice || !account) {
+      setError('Please enter a valid price');
+      return;
+    }
+
+    setSellLoading(true);
+    setError('');
+
+    try {
+      const priceInMist = Math.floor(parseFloat(sellPrice) * 1_000_000_000);
+
+      const tx = new TransactionBlock();
+      tx.moveCall({
+        target: `${PACKAGE_ID}::marketplace::list`,
+        typeArguments: [selectedNFT.itemType, COIN_TYPE],
+        arguments: [
+          tx.object(MARKETPLACE_ID),
+          tx.object(selectedNFT.itemId),
+          tx.pure(priceInMist, 'u64'),
+        ],
+      });
+
+      signAndExecuteTransaction(
+        {
+          transactionBlock: tx,
+          options: {
+            showEffects: true,
+            showObjectChanges: true,
+          },
+        },
+        {
+          onSuccess: (result: any) => {
+            console.log('List transaction successful:', result);
+            setDebugInfo(`Item listed successfully! Digest: ${result.digest}`);
+            setSellPrice('');
+            setShowSellModal(false);
+            setSelectedNFT(null);
+            setSellLoading(false);
+            fetchUserNFTs();
+          },
+          onError: (error: any) => {
+            console.error('List transaction error:', error);
+            setError(error.message || 'Failed to list item');
+            setSellLoading(false);
+          },
+        }
+      );
+    } catch (err: any) {
+      console.error('List function error:', err);
+      setError(err.message || 'Failed to list item');
+      setSellLoading(false);
     }
   };
 
@@ -288,7 +350,7 @@ export default function Inventory() {
         </div>
 
         {/* NFT Detail Modal */}
-        {selectedNFT && (
+        {selectedNFT && !showSellModal && (
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedNFT(null)}
@@ -376,6 +438,136 @@ export default function Inventory() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <button
+                  onClick={() => setShowSellModal(true)}
+                  className="w-full px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 mt-4"
+                >
+                  <Tag className="w-5 h-5" />
+                  List on Marketplace
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sell Confirmation Modal */}
+        {showSellModal && selectedNFT && (
+          <div 
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => {
+              setShowSellModal(false);
+              setSellPrice('');
+              setError('');
+            }}
+          >
+            <div 
+              className="glass-dark border border-brand-purple/30 rounded-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold neon-text-glow mb-1">List NFT</h2>
+                  <p className="text-slate-400 text-sm">Set your asking price</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowSellModal(false);
+                    setSellPrice('');
+                    setError('');
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* NFT Preview */}
+              <div className="glass-dark rounded-lg p-4 border border-brand-purple/20 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30 flex-shrink-0">
+                    {selectedNFT.imageUrl && selectedNFT.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                      <img
+                        src={selectedNFT.imageUrl.startsWith('http') ? selectedNFT.imageUrl : `https://${selectedNFT.imageUrl}`}
+                        alt={selectedNFT.name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-3xl">🎵</div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-bold truncate">{selectedNFT.name}</h3>
+                    <p className="text-slate-400 text-xs truncate">{selectedNFT.itemId}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Input */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-slate-400 text-sm mb-2">Asking Price (SUI)</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(e.target.value)}
+                    placeholder="1.5"
+                    className="w-full glass-dark border border-brand-purple/20 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
+                    autoFocus
+                  />
+                  {sellPrice && (
+                    <p className="text-slate-500 text-xs mt-2">
+                      ≈ {Math.floor(parseFloat(sellPrice) * 1_000_000_000).toLocaleString()} MIST
+                    </p>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="glass-dark rounded-lg p-3 border border-red-500/30">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="glass-dark rounded-lg p-3 border border-yellow-500/30 bg-yellow-500/10">
+                  <p className="text-yellow-400 text-xs">
+                    <strong>Note:</strong> Once listed, your NFT will be transferred to the marketplace. You can delist it anytime before it's sold.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowSellModal(false);
+                      setSellPrice('');
+                      setError('');
+                    }}
+                    className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                    disabled={sellLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSellNFT}
+                    disabled={!sellPrice || sellLoading}
+                    className="flex-1 px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {sellLoading ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Listing...
+                      </>
+                    ) : (
+                      <>
+                        <Tag className="w-5 h-5" />
+                        Confirm Listing
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
