@@ -1,7 +1,7 @@
 // pages/marketplace.tsx
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { Music, Search, AlertCircle, RefreshCw, Tag } from 'lucide-react';
+import { Music, Search, AlertCircle, RefreshCw, Tag, ShoppingCart } from 'lucide-react';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit';
 import BuyForm from '../components/BuyForm';
 import SellForm from '../components/SellForm';
@@ -16,7 +16,6 @@ export default function Marketplace() {
   const client = useSuiClient();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransactionBlock();
   
-  const [activeTab, setActiveTab] = useState('listings');
   const [listings, setListings] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,6 +23,9 @@ export default function Marketplace() {
   const [success, setSuccess] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
   const [selectedListing, setSelectedListing] = useState<any>(null);
+  const [showBuyForm, setShowBuyForm] = useState(false);
+  const [showSellForm, setShowSellForm] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Sell Form State
   const [itemToList, setItemToList] = useState('');
@@ -39,12 +41,23 @@ export default function Marketplace() {
     fetchAllListings();
   }, [client, MARKETPLACE_ID]);
 
+  // Auto-minimize when loading is complete
+  useEffect(() => {
+    if (!loading && (debugInfo || error)) {
+      const timer = setTimeout(() => {
+        setIsMinimized(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, debugInfo, error]);
+
   const fetchAllListings = async () => {
     if (!client) return;
     
     setLoading(true);
     setError('');
     setDebugInfo('Fetching listings from marketplace...');
+    setIsMinimized(false);
     
     try {
       const marketplaceObj = await client.getObject({
@@ -179,12 +192,6 @@ export default function Marketplace() {
     listing.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const tabs = [
-    { id: 'listings', label: 'Active Listings', icon: Music },
-    { id: 'buy', label: 'Buy', icon: () => <span className="text-xl">🛒</span> },
-    { id: 'sell', label: 'Sell', icon: Tag },
-  ];
-
   return (
     <>
       <Head>
@@ -212,186 +219,95 @@ export default function Marketplace() {
           </p>
         </div>
 
-        {/* Main Content with Tabs */}
-        <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
-          {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 border-b border-brand-purple/20">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all ${
-                    activeTab === tab.id
-                      ? 'text-white border-b-2 border-brand-purple bg-brand-purple/10'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Status Messages */}
+        {/* Status Messages - Fixed to Lower Left with Minimize */}
+        <div className="fixed bottom-6 left-6 z-40 space-y-3">
           {debugInfo && (
-            <div className="mb-4 glass-dark rounded-lg p-3 border border-blue-500/30">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-blue-400 text-sm font-semibold">Status:</p>
-                  <p className="text-slate-300 text-xs mt-1">{debugInfo}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-4 glass-dark rounded-lg p-3 border border-red-500/30">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-red-400 text-sm font-semibold">Error:</p>
-                  <p className="text-slate-300 text-xs mt-1">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 glass-dark rounded-lg p-3 border border-green-500/30">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-green-400 text-sm font-semibold">Success:</p>
-                  <p className="text-slate-300 text-xs mt-1">{success}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab Content */}
-          {activeTab === 'listings' && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Active Listings</h2>
-                <button
-                  onClick={fetchAllListings}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="text-sm font-semibold">{loading ? 'Loading...' : 'Refresh'}</span>
-                </button>
-              </div>
-
-              {/* Search Bar */}
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by name, ID, or description..."
-                    className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
-                  />
-                </div>
-              </div>
-
-              {/* Listings Grid */}
-              {loading ? (
-                <div className="text-center py-16">
-                  <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-slate-400">Loading listings...</p>
-                </div>
-              ) : filteredListings.length === 0 ? (
-                <div className="glass-dark rounded-lg p-12 border border-brand-purple/20 text-center space-y-4">
-                  <Music className="w-16 h-16 mx-auto text-brand-purple/50" />
-                  <p className="text-slate-400 text-lg">
-                    {searchTerm ? 'No listings match your search.' : 'No active listings yet'}
-                  </p>
-                  <p className="text-slate-500">
-                    {searchTerm ? 'Try a different search term.' : 'Check back later for new music NFTs'}
-                  </p>
+            <div 
+              className={`glass-dark rounded-xl border border-blue-500/40 shadow-2xl shadow-blue-500/20 backdrop-blur-xl transition-all duration-500 cursor-pointer ${
+                isMinimized ? 'w-12 h-12 p-0' : 'max-w-md p-4'
+              }`}
+              onClick={() => setIsMinimized(!isMinimized)}
+            >
+              {isMinimized ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <AlertCircle className="w-5 h-5 text-blue-400" />
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <div className="mb-4 text-sm text-slate-400">
-                    Showing {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'}
+                <div className="flex items-start gap-3 animate-slide-in-left">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
+                    <AlertCircle className="w-5 h-5 text-blue-400" />
                   </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {filteredListings.map((listing) => (
-                      <div
-                        key={listing.itemId}
-                        className="glass-dark backdrop-blur-sm border border-brand-purple/30 rounded-xl p-5 hover:border-brand-purple/60 transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-brand-purple/20 hover:-translate-y-1"
-                        onClick={() => setSelectedListing(listing)}
-                      >
-                        {/* Image Container */}
-                        <div className="flex justify-center mb-4">
-                          <div className="relative w-full max-w-[200px] h-[200px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
-                            {listing.imageUrl && listing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
-                              <img
-                                src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `https://${listing.imageUrl}`}
-                                alt={listing.name}
-                                className="w-full h-full object-contain"
-                                style={{ maxWidth: '100%', maxHeight: '200px' }}
-                                onError={(e: any) => {
-                                  e.target.style.display = 'none';
-                                  const parent = e.target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = '<div class="flex flex-col items-center justify-center w-full h-full text-brand-purple"><div class="text-6xl mb-2">🎵</div><div class="text-sm text-slate-400">Image Failed</div></div>';
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="flex flex-col items-center justify-center w-full h-full text-brand-purple">
-                                <div className="text-6xl mb-2">🎵</div>
-                                <div className="text-sm text-slate-400">Music NFT</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* NFT Info */}
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg mb-2 truncate">{listing.name}</h3>
-                          
-                          <p className="text-slate-400 text-xs mb-2">
-                            <strong>Item ID:</strong> {listing.itemId.slice(0, 16)}...
-                          </p>
-                          
-                          <p className="text-brand-purple font-bold text-xl mb-2 neon-text-glow">
-                            {formatSui(listing.askPrice)} SUI
-                          </p>
-                          
-                          <p className="text-slate-500 text-xs mb-3 line-clamp-2">
-                            {listing.description}
-                          </p>
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedListing(listing);
-                            }}
-                            className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-blue-400 text-sm font-bold mb-1">Status</p>
+                    <p className="text-slate-200 text-sm leading-relaxed">{debugInfo}</p>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDebugInfo('');
+                      setIsMinimized(false);
+                    }}
+                    className="text-slate-400 hover:text-white transition-colors ml-2"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
             </div>
           )}
 
-          {activeTab === 'buy' && (
-            <BuyForm
+          {error && (
+            <div 
+              className={`glass-dark rounded-xl border border-red-500/40 shadow-2xl shadow-red-500/20 backdrop-blur-xl transition-all duration-500 cursor-pointer ${
+                isMinimized ? 'w-12 h-12 p-0' : 'max-w-md p-4'
+              }`}
+              onClick={() => setIsMinimized(!isMinimized)}
+            >
+              {isMinimized ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 animate-slide-in-left">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 border border-red-500/30">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-red-400 text-sm font-bold mb-1">Error</p>
+                    <p className="text-slate-200 text-sm leading-relaxed">{error}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setError('');
+                      setIsMinimized(false);
+                    }}
+                    className="text-slate-400 hover:text-white transition-colors ml-2"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Buy Form Modal */}
+        {showBuyForm && (
+          <div className="glass-dark rounded-lg p-6 border border-green-600/30">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-green-400">Buy NFT</h2>
+              <button
+                onClick={() => setShowBuyForm(false)}
+                className="text-slate-400 hover:text-white text-2xl"
+              >
+              </button>
+            </div>
+            <BuyForm  
               account={account}
               loading={loading}
               setLoading={setLoading}
@@ -409,9 +325,21 @@ export default function Marketplace() {
               buyAmount={buyAmount}
               setBuyAmount={setBuyAmount}
             />
-          )}
+          </div>
+        )}
 
-          {activeTab === 'sell' && (
+        {/* Sell Form Modal */}
+        {showSellForm && (
+          <div className="glass-dark rounded-lg p-6 border border-brand-purple/30">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-brand-purple">List NFT for Sale</h2>
+              <button
+                onClick={() => setShowSellForm(false)}
+                className="text-slate-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
             <SellForm
               account={account}
               loading={loading}
@@ -430,7 +358,153 @@ export default function Marketplace() {
               itemType={itemType}
               setItemType={setItemType}
             />
+          </div>
+        )}
+
+        {/* Main Content - Active Listings */}
+        <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
+
+          {success && (
+            <div 
+              className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+              onClick={() => setSuccess('')}
+            >
+              <div 
+                className="glass-dark border border-brand-purple/50 rounded-2xl p-8 max-w-md w-full animate-scale-in shadow-2xl shadow-brand-purple/30"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-16 h-16 bg-brand-purple/30 rounded-full flex items-center justify-center border border-brand-purple/50">
+                    <span className="text-4xl">✓</span>
+                  </div>
+                  <h3 className="text-2xl font-bold neon-text-glow">Success!</h3>
+                  <p className="text-slate-300">{success}</p>
+                  <button
+                    onClick={() => setSuccess('')}
+                    className="w-full px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-brand-purple/50 mt-4"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
+
+          {/* Active Listings Section */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Active Listings</h2>
+              <button
+                onClick={fetchAllListings}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-sm font-semibold">{loading ? 'Loading...' : 'Refresh'}</span>
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, ID, or description..."
+                  className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
+                />
+              </div>
+            </div>
+
+            {/* Listings Grid */}
+            {loading ? (
+              <div className="text-center py-16">
+                <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-slate-400">Loading listings...</p>
+              </div>
+            ) : filteredListings.length === 0 ? (
+              <div className="glass-dark rounded-lg p-12 border border-brand-purple/20 text-center space-y-4">
+                <Music className="w-16 h-16 mx-auto text-brand-purple/50" />
+                <p className="text-slate-400 text-lg">
+                  {searchTerm ? 'No listings match your search.' : 'No active listings yet'}
+                </p>
+                <p className="text-slate-500">
+                  {searchTerm ? 'Try a different search term.' : 'Check back later for new music NFTs'}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="mb-4 text-sm text-slate-400">
+                  Showing {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'}
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredListings.map((listing) => (
+                    <div
+                      key={listing.itemId}
+                      className="glass-dark backdrop-blur-sm border border-brand-purple/30 rounded-xl p-5 hover:border-brand-purple/60 transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-brand-purple/20 hover:-translate-y-1"
+                      onClick={() => setSelectedListing(listing)}
+                    >
+                      {/* Image Container */}
+                      <div className="flex justify-center mb-4">
+                        <div className="relative w-full max-w-[200px] h-[200px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
+                          {listing.imageUrl && listing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
+                            <img
+                              src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `https://${listing.imageUrl}`}
+                              alt={listing.name}
+                              className="w-full h-full object-contain"
+                              style={{ maxWidth: '100%', maxHeight: '200px' }}
+                              onError={(e: any) => {
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = '<div class="flex flex-col items-center justify-center w-full h-full text-brand-purple"><div class="text-6xl mb-2">🎵</div><div class="text-sm text-slate-400">Image Failed</div></div>';
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full text-brand-purple">
+                              <div className="text-6xl mb-2">🎵</div>
+                              <div className="text-sm text-slate-400">Music NFT</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* NFT Info */}
+                      <div className="text-center">
+                        <h3 className="text-white font-bold text-lg mb-2 truncate">{listing.name}</h3>
+                        
+                        <p className="text-slate-400 text-xs mb-2">
+                          <strong>Item ID:</strong> {listing.itemId.slice(0, 16)}...
+                        </p>
+                        
+                        <p className="text-brand-purple font-bold text-xl mb-2 neon-text-glow">
+                          {formatSui(listing.askPrice)} SUI
+                        </p>
+                        
+                        <p className="text-slate-500 text-xs mb-3 line-clamp-2">
+                          {listing.description}
+                        </p>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedListing(listing);
+                          }}
+                          className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
+                        >
+                          Buy Music NFT
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* NFT Detail Modal */}
@@ -521,7 +595,7 @@ export default function Marketplace() {
                     setItemIdToBuy(selectedListing.itemId);
                     setBuyItemType(selectedListing.itemType);
                     setBuyAmount(formatSui(selectedListing.askPrice));
-                    setActiveTab('buy');
+                    setShowBuyForm(true);
                     setSelectedListing(null);
                   }}
                   className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 mt-4"
