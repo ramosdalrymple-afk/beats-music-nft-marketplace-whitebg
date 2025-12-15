@@ -44,6 +44,32 @@ export default function BeatsMusic() {
     'from-indigo-600 to-purple-600',
   ];
 
+  // Load favorites from storage on mount
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const result = await window.storage.get('beats-favorites');
+      if (result && result.value) {
+        const favoritesArray = JSON.parse(result.value);
+        setLiked(new Set(favoritesArray));
+      }
+    } catch (err) {
+      console.log('No favorites found or error loading:', err);
+    }
+  };
+
+  const saveFavorites = async (newLiked: Set<string>) => {
+    try {
+      const favoritesArray = Array.from(newLiked);
+      await window.storage.set('beats-favorites', JSON.stringify(favoritesArray));
+    } catch (err) {
+      console.error('Error saving favorites:', err);
+    }
+  };
+
   useEffect(() => {
     if (account) {
       fetchUserNFTs();
@@ -54,7 +80,6 @@ export default function BeatsMusic() {
         audioRef.current.currentTime = 0;
       }
       setTracks([]);
-      setLiked(new Set());
       setProgress(0);
       setCurrentTrackIndex(0);
       setError('Please connect your wallet to access your music NFTs');
@@ -245,6 +270,7 @@ export default function BeatsMusic() {
       newLiked.add(currentTrack.id);
     }
     setLiked(newLiked);
+    saveFavorites(newLiked);
     
     const sortedTracks = sortTracksByFavorites(tracks);
     setTracks(sortedTracks);
@@ -264,6 +290,10 @@ export default function BeatsMusic() {
 
   const progressPercent = currentTrack && currentTrack.duration > 0 ? (progress / currentTrack.duration) * 100 : 0;
 
+
+
+// CONTINUED FROM PART 1
+  
   return (
     <>
       <Head>
@@ -316,84 +346,69 @@ export default function BeatsMusic() {
             <>
               {currentTrack && (
                 <div className="rounded-3xl border border-white/10 overflow-hidden shadow-2xl backdrop-blur-xl bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 relative">
-                  {/* Main glossy overlays */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute inset-0 bg-gradient-to-tl from-white/5 via-transparent to-transparent pointer-events-none" />
                   
                   <div className="grid md:grid-cols-2 gap-0 relative">
-                    {/* Left Side - Album Art and Info */}
-                    <div className={`bg-gradient-to-br ${currentTrack.color} p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px]`}>
-                      {/* Glossy glass morphism layers */}
+                    {/* Left Side - Album Art */}
+                    <div className={`bg-gradient-to-br ${currentTrack.color} p-12 relative overflow-hidden flex flex-col justify-center min-h-[480px]`}>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                       <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
                       <div className={`absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${currentTrack.color}`} />
                       <div className="absolute inset-0 backdrop-blur-[2px]" />
                       
-                      {/* Album Art */}
-                      <div className="relative z-10 flex-1 flex items-center justify-center">
-                        <div className="relative w-64 h-64 rounded-3xl shadow-2xl overflow-hidden">
-                          {/* Glossy border effect */}
-                          <div className="absolute inset-0 rounded-3xl border-4 border-white/30 backdrop-blur-sm" />
-                          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/30 via-white/10 to-transparent" />
+                      <div className="relative z-10 flex items-center justify-center mb-8">
+                        <div className="relative w-56 h-56 rounded-2xl shadow-2xl overflow-hidden">
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/30 backdrop-blur-sm" />
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 via-white/10 to-transparent" />
                           
                           {currentTrack.imageUrl && (
                             <img
                               key={currentTrack.id}
                               src={currentTrack.imageUrl}
                               alt={currentTrack.title}
-                              className="w-full h-full rounded-3xl object-cover absolute inset-0 z-10 shadow-inner"
+                              className="w-full h-full rounded-2xl object-cover absolute inset-0 z-10 shadow-inner"
                               onError={(e: any) => {
                                 e.target.style.display = 'none';
                               }}
                             />
                           )}
-                          <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-3xl flex items-center justify-center`}>
-                            <Disc3 className="w-32 h-32 text-white opacity-30" />
+                          <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${currentTrack.color} rounded-2xl flex items-center justify-center`}>
+                            <Disc3 className="w-28 h-28 text-white opacity-30" />
                           </div>
-                          {/* Glass reflection */}
-                          <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-transparent via-white/10 to-white/30 pointer-events-none" />
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/10 to-white/30 pointer-events-none" />
                         </div>
                       </div>
 
-                      {/* Album Info */}
-                      <div className="relative z-10 space-y-2">
-                        <div className="backdrop-blur-xl bg-black/30 rounded-2xl p-4 border border-white/20 shadow-xl relative overflow-hidden">
-                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                          <h2 className="text-3xl font-black uppercase tracking-tight relative">{currentTrack.album}</h2>
-                          {/* <div className="flex items-center gap-1 mt-2 relative">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span key={star} className="text-yellow-400 text-xl drop-shadow-lg">★</span>
-                            ))}
-                            <span className="ml-2 text-lg font-bold drop-shadow-lg">5.0</span>
-                          </div> */}
+                      <div className="relative z-10">
+                        <div className="backdrop-blur-xl bg-black/30 rounded-xl p-5 border border-white/20 shadow-xl relative overflow-hidden">
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                          <h2 className="text-2xl font-bold tracking-wide relative">{currentTrack.album}</h2>
                         </div>
                       </div>
                     </div>
 
                     {/* Right Side - Track List */}
-                    <div className="bg-slate-900/80 backdrop-blur-2xl p-8 flex flex-col relative">
-                      {/* Glossy overlay */}
+                    <div className="bg-slate-900/80 backdrop-blur-2xl p-6 flex flex-col relative">
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                       
-                      {/* Header */}
-                      <div className="mb-6 flex items-center justify-between relative z-10">
-                        <div className="backdrop-blur-xl bg-white/5 rounded-xl p-3 border border-white/10 relative overflow-hidden">
+                      <div className="mb-5 flex items-center justify-between relative z-10">
+                        <div className="backdrop-blur-xl bg-white/5 rounded-lg px-4 py-2.5 border border-white/10 relative overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                          <h3 className="text-sm uppercase tracking-wider text-cyan-400 font-bold drop-shadow-lg relative">Now Playing</h3>
-                          <h2 className="text-2xl font-black uppercase relative">{currentTrack.album}</h2>
+                          <h3 className="text-xs tracking-wide text-cyan-400 font-semibold drop-shadow-lg relative mb-0.5">Now Playing</h3>
+                          <h2 className="text-lg font-bold relative">{currentTrack.album}</h2>
                         </div>
                         <button
                           onClick={fetchUserNFTs}
                           disabled={loading}
-                          className="p-3 hover:bg-white/10 rounded-xl transition backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg relative overflow-hidden"
+                          className="p-2.5 hover:bg-white/10 rounded-lg transition backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg relative overflow-hidden"
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                          <RefreshCw className={`w-5 h-5 relative z-10 ${loading ? 'animate-spin' : ''}`} />
+                          <RefreshCw className={`w-4 h-4 relative z-10 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                       </div>
 
-                      {/* Track List */}
-                      <div className="flex-1 overflow-y-auto space-y-3 pr-2 relative z-10" style={{ maxHeight: '320px' }}>
+                      <div className="flex-1 overflow-y-auto space-y-2 pr-2 relative z-10" style={{ maxHeight: '340px' }}>
                         {tracks.map((track, index) => (
                           <button
                             key={track.id}
@@ -402,30 +417,28 @@ export default function BeatsMusic() {
                               setProgress(0);
                               setIsPlaying(true);
                             }}
-                            className={`w-full p-5 rounded-2xl border-2 transition text-left relative overflow-hidden group ${
+                            className={`w-full p-3.5 rounded-xl border transition text-left relative overflow-hidden group ${
                               index === currentTrackIndex
-                                ? 'border-cyan-400/50 bg-gradient-to-br from-cyan-500/20 via-cyan-500/10 to-transparent shadow-lg shadow-cyan-400/20'
-                                : 'border-white/10 bg-gradient-to-br from-slate-800/40 to-slate-800/20 hover:border-cyan-400/30 hover:from-slate-800/60 hover:to-slate-800/40'
+                                ? 'border-cyan-400/40 bg-gradient-to-br from-cyan-500/15 via-cyan-500/5 to-transparent shadow-lg shadow-cyan-400/10'
+                                : 'border-white/10 bg-gradient-to-br from-slate-800/30 to-slate-800/10 hover:border-cyan-400/30 hover:from-slate-800/50 hover:to-slate-800/30'
                             }`}
                           >
-                            {/* Glossy overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
-                            <div className="absolute inset-0 backdrop-blur-sm pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                             
-                            <div className="flex items-center gap-4 relative z-10">
-                              <span className="text-lg font-bold text-cyan-400 w-6 drop-shadow-lg">{index + 1}.</span>
+                            <div className="flex items-center gap-3 relative z-10">
+                              <span className="text-sm font-semibold text-cyan-400 w-5">{index + 1}.</span>
                               <div className="flex-1 min-w-0">
-                                <p className="font-bold text-base uppercase truncate tracking-wide drop-shadow-sm">{track.title}</p>
-                                <p className="text-xs text-slate-400 uppercase truncate">{track.artist}</p>
+                                <p className="font-semibold text-sm truncate">{track.title}</p>
+                                <p className="text-xs text-slate-400 truncate">{track.artist}</p>
                               </div>
                               {liked.has(track.id) && (
-                                <Heart className="w-4 h-4 text-red-500 fill-red-500 flex-shrink-0 drop-shadow-lg" />
+                                <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 flex-shrink-0" />
                               )}
                               {index === currentTrackIndex && isPlaying && (
-                                <div className="flex gap-1">
-                                  <div className="w-1 h-4 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50" />
-                                  <div className="w-1 h-4 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50" style={{ animationDelay: '0.1s' }} />
-                                  <div className="w-1 h-4 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50" style={{ animationDelay: '0.2s' }} />
+                                <div className="flex gap-0.5">
+                                  <div className="w-0.5 h-3 bg-cyan-400 rounded-full animate-pulse shadow-sm shadow-cyan-400/50" />
+                                  <div className="w-0.5 h-3 bg-cyan-400 rounded-full animate-pulse shadow-sm shadow-cyan-400/50" style={{ animationDelay: '0.1s' }} />
+                                  <div className="w-0.5 h-3 bg-cyan-400 rounded-full animate-pulse shadow-sm shadow-cyan-400/50" style={{ animationDelay: '0.2s' }} />
                                 </div>
                               )}
                             </div>
@@ -435,15 +448,12 @@ export default function BeatsMusic() {
                     </div>
                   </div>
 
-                  {/* Bottom Controls Bar */}
-                  <div className="bg-slate-900/90 backdrop-blur-2xl border-t border-white/10 p-8 relative">
-                    {/* Glossy overlay */}
+                  {/* Bottom Controls */}
+                  <div className="bg-slate-900/90 backdrop-blur-2xl border-t border-white/10 p-6 relative">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
                     
-                    <div className="flex items-center gap-8 relative z-10">
-                      {/* Current Track Thumbnail */}
-                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-white/20 relative shadow-xl">
-                        {/* Glossy effect on thumbnail */}
+                    <div className="flex items-center gap-6 relative z-10">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-700 to-slate-800 border border-white/20 relative shadow-lg">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none z-20" />
                         
                         {currentTrack.imageUrl && (
@@ -458,82 +468,66 @@ export default function BeatsMusic() {
                           />
                         )}
                         <div className="w-full h-full flex items-center justify-center absolute inset-0">
-                          <Music className="w-6 h-6 text-cyan-400 drop-shadow-lg" />
+                          <Music className="w-5 h-5 text-cyan-400" />
                         </div>
                       </div>
 
-                      {/* Track Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg uppercase truncate drop-shadow-sm">{currentTrack.title}</h3>
-                        <p className="text-sm text-cyan-400 uppercase truncate drop-shadow-sm">{currentTrack.artist}</p>
+                        <h3 className="font-semibold text-base truncate">{currentTrack.title}</h3>
+                        <p className="text-sm text-cyan-400 truncate">{currentTrack.artist}</p>
                       </div>
 
-                      {/* Main Controls */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={handlePreviousTrack}
-                          className="text-cyan-400 hover:text-cyan-300 transition p-2 rounded-xl hover:bg-white/5 backdrop-blur-xl border border-transparent hover:border-white/10 relative overflow-hidden group"
-                          title="Previous track"
+                          className="text-cyan-400 hover:text-cyan-300 transition p-2 rounded-lg hover:bg-white/5 backdrop-blur-xl border border-transparent hover:border-white/10 relative overflow-hidden group"
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition pointer-events-none" />
-                          <SkipBack className="w-7 h-7 fill-current drop-shadow-lg relative z-10" />
+                          <SkipBack className="w-5 h-5 fill-current relative z-10" />
                         </button>
 
                         <button
                           onClick={handlePlayPause}
-                          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 hover:from-cyan-300 hover:to-cyan-500 transition transform hover:scale-105 flex items-center justify-center shadow-xl shadow-cyan-400/30 border-2 border-white/20 relative overflow-hidden"
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 hover:from-cyan-300 hover:to-cyan-500 transition transform hover:scale-105 flex items-center justify-center shadow-lg shadow-cyan-400/30 border border-white/20 relative overflow-hidden"
                         >
-                          {/* Glossy overlay on play button */}
                           <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none" />
                           
                           {isPlaying ? (
-                            <Pause className="w-7 h-7 text-slate-900 fill-slate-900 relative z-10 drop-shadow-md" />
+                            <Pause className="w-5 h-5 text-slate-900 fill-slate-900 relative z-10" />
                           ) : (
-                            <Play className="w-7 h-7 text-slate-900 fill-slate-900 ml-1 relative z-10 drop-shadow-md" />
+                            <Play className="w-5 h-5 text-slate-900 fill-slate-900 ml-0.5 relative z-10" />
                           )}
                         </button>
 
                         <button
                           onClick={handleNextTrack}
-                          className="text-cyan-400 hover:text-cyan-300 transition p-2 rounded-xl hover:bg-white/5 backdrop-blur-xl border border-transparent hover:border-white/10 relative overflow-hidden group"
-                          title="Next track"
+                          className="text-cyan-400 hover:text-cyan-300 transition p-2 rounded-lg hover:bg-white/5 backdrop-blur-xl border border-transparent hover:border-white/10 relative overflow-hidden group"
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition pointer-events-none" />
-                          <SkipForward className="w-7 h-7 fill-current drop-shadow-lg relative z-10" />
+                          <SkipForward className="w-5 h-5 fill-current relative z-10" />
                         </button>
                       </div>
 
-                      {/* Additional Controls */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={toggleLike}
-                          className={`transition p-2 rounded-xl backdrop-blur-xl border relative overflow-hidden ${
+                          className={`transition p-2 rounded-lg backdrop-blur-xl border relative overflow-hidden ${
                             liked.has(currentTrack.id) 
                               ? 'text-red-500 bg-red-500/10 border-red-500/30' 
                               : 'text-slate-400 hover:text-red-400 hover:bg-white/5 border-transparent hover:border-white/10'
                           }`}
-                          title="Like track"
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                          <Heart className={`w-6 h-6 relative z-10 ${liked.has(currentTrack.id) ? 'fill-red-500 drop-shadow-lg' : ''}`} />
+                          <Heart className={`w-5 h-5 relative z-10 ${liked.has(currentTrack.id) ? 'fill-red-500' : ''}`} />
                         </button>
 
-                        {/* <button className="text-cyan-400 hover:text-cyan-300 transition p-2 rounded-xl hover:bg-white/5 backdrop-blur-xl border border-transparent hover:border-white/10 relative overflow-hidden group">
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition pointer-events-none" />
-                          <div className="flex flex-col gap-1 relative z-10">
-                            <div className="w-6 h-0.5 bg-current rounded-full" />
-                            <div className="w-6 h-0.5 bg-current rounded-full" />
-                            <div className="w-6 h-0.5 bg-current rounded-full" />
-                          </div>
-                        </button> */}
-
-                        <div className="flex items-center gap-2 backdrop-blur-xl bg-white/5 rounded-xl p-2 border border-white/10 relative overflow-hidden">
+                        <div className="flex items-center gap-2 backdrop-blur-xl bg-white/5 rounded-lg px-2 py-1.5 border border-white/10 relative overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
                           <button
                             onClick={toggleMute}
                             className="text-cyan-400 hover:text-cyan-300 transition relative z-10"
                           >
-                            {isMuted || volume === 0 ? <VolumeX className="w-6 h-6 drop-shadow-lg" /> : <Volume2 className="w-6 h-6 drop-shadow-lg" />}
+                            {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                           </button>
                           <input
                             type="range"
@@ -541,7 +535,7 @@ export default function BeatsMusic() {
                             max="100"
                             value={isMuted ? 0 : volume}
                             onChange={handleVolumeChange}
-                            className="w-24 h-1 rounded-full appearance-none cursor-pointer relative z-10"
+                            className="w-20 h-1 rounded-full appearance-none cursor-pointer relative z-10"
                             style={{
                               background: `linear-gradient(to right, rgb(34, 211, 238) 0%, rgb(34, 211, 238) ${isMuted ? 0 : volume}%, rgb(51, 65, 85) ${isMuted ? 0 : volume}%, rgb(51, 65, 85) 100%)`
                             }}
@@ -550,16 +544,14 @@ export default function BeatsMusic() {
                       </div>
                     </div>
 
-
-                    {/* Progress Bar */}
-                    <div className="mt-6 space-y-2">
+                    <div className="mt-5 space-y-1.5">
                       <input
                         type="range"
                         min="0"
                         max={currentTrack.duration || 100}
                         value={progress}
                         onChange={handleProgressChange}
-                        className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
+                        className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer"
                         style={{
                           background: `linear-gradient(to right, 
                             rgb(6, 182, 212) 0%, 
@@ -573,6 +565,130 @@ export default function BeatsMusic() {
                         <span>{formatTime(currentTrack.duration)}</span>
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Favorites Panel */}
+              {liked.size > 0 && (
+                <div className="rounded-3xl border border-white/10 overflow-hidden shadow-2xl backdrop-blur-xl bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-tl from-white/5 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="bg-gradient-to-r from-red-500/20 via-pink-500/20 to-purple-500/20 border-b border-white/10 p-6 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <Heart className="w-6 h-6 text-red-500 fill-red-500" />
+                      <div>
+                        <h2 className="text-2xl font-bold">Favorite Tracks</h2>
+                        <p className="text-sm text-slate-400">{liked.size} {liked.size === 1 ? 'track' : 'tracks'} in your favorites</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-3 relative z-10">
+                    {tracks.filter(track => liked.has(track.id)).map((track) => {
+                      const trackIndex = tracks.findIndex(t => t.id === track.id);
+                      const isCurrentTrack = trackIndex === currentTrackIndex;
+                      
+                      return (
+                        <div
+                          key={track.id}
+                          className={`rounded-xl border p-4 relative overflow-hidden transition ${
+                            isCurrentTrack
+                              ? 'border-cyan-400/40 bg-gradient-to-br from-cyan-500/15 via-cyan-500/5 to-transparent shadow-lg shadow-cyan-400/10'
+                              : 'border-white/10 bg-gradient-to-br from-slate-800/40 to-slate-800/20 hover:border-white/20'
+                          }`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                          
+                          <div className="flex items-center gap-4 relative z-10">
+                            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-lg">
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none z-20" />
+                              
+                              {track.imageUrl && (
+                                <img
+                                  src={track.imageUrl}
+                                  alt={track.title}
+                                  className="w-full h-full object-cover absolute inset-0 z-10"
+                                  onError={(e: any) => {
+                                    e.target.style.display = 'none';
+                                  }}
+                                />
+                              )}
+                              <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${track.color} rounded-lg flex items-center justify-center`}>
+                                <Music className="w-6 h-6 text-white opacity-40" />
+                              </div>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-base truncate">{track.title}</h3>
+                              <p className="text-sm text-cyan-400 truncate">{track.artist}</p>
+                              <p className="text-xs text-slate-500 truncate mt-0.5">{track.album}</p>
+                            </div>
+
+                            <div className="text-sm text-slate-400 flex-shrink-0">
+                              {formatTime(track.duration)}
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setCurrentTrackIndex(trackIndex);
+                                setProgress(0);
+                                setIsPlaying(true);
+                              }}
+                              className="p-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50 transition flex-shrink-0 relative overflow-hidden group"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+                              {isCurrentTrack && isPlaying ? (
+                                <Pause className="w-4 h-4 relative z-10" />
+                              ) : (
+                                <Play className="w-4 h-4 relative z-10" />
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                const newLiked = new Set(liked);
+                                newLiked.delete(track.id);
+                                setLiked(newLiked);
+                                
+                                // Save to storage
+                                const saveFavorites = async (favSet: Set<string>) => {
+                                  try {
+                                    const favoritesArray = Array.from(favSet);
+                                    await window.storage.set('beats-favorites', JSON.stringify(favoritesArray));
+                                  } catch (err) {
+                                    console.error('Error saving favorites:', err);
+                                  }
+                                };
+                                saveFavorites(newLiked);
+                                
+                                const sortTracksByFavorites = (tracksToSort: Track[]) => {
+                                  const favorites = tracksToSort.filter(t => newLiked.has(t.id));
+                                  const nonFavorites = tracksToSort.filter(t => !newLiked.has(t.id));
+                                  return [...favorites, ...nonFavorites];
+                                };
+                                
+                                const sortedTracks = sortTracksByFavorites(tracks);
+                                setTracks(sortedTracks);
+                                
+                                if (isCurrentTrack) {
+                                  const newIndex = sortedTracks.findIndex(t => t.id === track.id);
+                                  if (newIndex !== -1) {
+                                    setCurrentTrackIndex(newIndex);
+                                  }
+                                }
+                              }}
+                              className="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 transition flex-shrink-0 relative overflow-hidden group"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+                              <Heart className="w-4 h-4 fill-current relative z-10" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

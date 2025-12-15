@@ -497,35 +497,40 @@ export default function Marketplace() {
           )}
         </div>
 
-        {/* NFT Detail Modal */}
+        {/* NFT Detail Modal - Modern Rectangle Design */}
         {selectedListing && !showBuyModal && (
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedListing(null)}
           >
             <div 
-              className="glass-dark border border-brand-purple/30 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass-dark border border-brand-purple/30 rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl shadow-brand-purple/20"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold neon-text-glow">{selectedListing.name}</h2>
+              {/* Header Bar */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-brand-purple/20 bg-gradient-to-r from-brand-purple/10 to-transparent">
+                <div>
+                  <h2 className="text-2xl font-bold neon-text-glow">{selectedListing.name}</h2>
+                  <p className="text-slate-400 text-sm mt-1">Item ID: {truncateAddress(selectedListing.itemId)}</p>
+                </div>
                 <button
                   onClick={() => setSelectedListing(null)}
-                  className="text-slate-400 hover:text-white text-2xl"
+                  className="w-10 h-10 flex items-center justify-center glass-dark border border-brand-purple/30 rounded-lg hover:bg-brand-purple/20 transition-colors"
                 >
-                  ×
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                {/* Image */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative w-full max-w-[400px] h-[400px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
+              {/* Content Area - Split Layout */}
+              <div className="grid md:grid-cols-2 gap-6 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {/* Left Column - Image */}
+                <div className="space-y-4">
+                  <div className="relative w-full aspect-square glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30 group">
                     {selectedListing.imageUrl && selectedListing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
                       <img
                         src={selectedListing.imageUrl.startsWith('http') ? selectedListing.imageUrl : `https://${selectedListing.imageUrl}`}
                         alt={selectedListing.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain transition-transform group-hover:scale-105"
                         onError={(e: any) => {
                           e.target.style.display = 'none';
                           const parent = e.target.parentElement;
@@ -541,52 +546,72 @@ export default function Marketplace() {
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Details */}
-                <div className="space-y-3">
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Description</p>
-                    <p className="text-white">{selectedListing.description}</p>
-                  </div>
-
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Price</p>
-                    <p className="text-brand-purple font-bold text-2xl neon-text-glow">
-                      {formatSui(selectedListing.askPrice)} SUI
+                  {/* Price Card - Featured */}
+                  <div className="glass-dark rounded-lg p-6 border border-brand-purple/30 bg-gradient-to-br from-brand-purple/10 to-transparent">
+                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-2">Current Price</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-brand-purple font-bold text-4xl neon-text-glow">
+                        {formatSui(selectedListing.askPrice)}
+                      </p>
+                      <span className="text-slate-400 text-xl">SUI</span>
+                    </div>
+                    <p className="text-slate-500 text-xs mt-2">
+                      ≈ {Number(selectedListing.askPrice).toLocaleString()} MIST
                     </p>
                   </div>
+                </div>
 
+                {/* Right Column - Details */}
+                <div className="space-y-4">
+                  {/* Description */}
                   <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Owner</p>
-                    <p className="text-white font-mono text-sm">{truncateAddress(selectedListing.owner)}</p>
+                    <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Description</p>
+                    <p className="text-white leading-relaxed">{selectedListing.description}</p>
                   </div>
 
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Item ID</p>
-                    <p className="text-white font-mono text-xs break-all">{selectedListing.itemId}</p>
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Owner</p>
+                      <p className="text-white font-mono text-sm">{truncateAddress(selectedListing.owner)}</p>
+                    </div>
+
+                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Item ID</p>
+                      <p className="text-white font-mono text-xs break-all">{truncateAddress(selectedListing.itemId)}</p>
+                    </div>
                   </div>
 
+                  {/* Attributes */}
                   {selectedListing.attributes && (
                     <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                      <p className="text-slate-400 text-sm mb-1">Attributes</p>
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Attributes</p>
                       <p className="text-white text-sm">{selectedListing.attributes}</p>
                     </div>
                   )}
 
+                  {/* Item Type */}
                   <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Item Type</p>
-                    <p className="text-white font-mono text-xs break-all">{selectedListing.itemType}</p>
+                    <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Item Type</p>
+                    <p className="text-slate-300 font-mono text-xs break-all">{selectedListing.itemType}</p>
+                  </div>
+
+                  {/* Action Section */}
+                  <div className="glass-dark rounded-lg p-4 border border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <p className="text-green-400 text-xs uppercase tracking-wider font-semibold">Available for Purchase</p>
+                    </div>
+                    <button
+                      onClick={() => setShowBuyModal(true)}
+                      className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      Buy This Item
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setShowBuyModal(true)}
-                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 mt-4"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  Buy This Item
-                </button>
               </div>
             </div>
           </div>

@@ -25,6 +25,7 @@ export default function Inventory() {
   const [sellPrice, setSellPrice] = useState('');
   const [sellLoading, setSellLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (account) {
@@ -120,6 +121,7 @@ export default function Inventory() {
 
     setSellLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const priceInMist = Math.floor(parseFloat(sellPrice) * 1_000_000_000);
@@ -146,7 +148,7 @@ export default function Inventory() {
         {
           onSuccess: (result: any) => {
             console.log('List transaction successful:', result);
-            setDebugInfo(`Item listed successfully! Digest: ${result.digest}`);
+            setSuccess(`NFT listed successfully! Digest: ${result.digest}`);
             setSellPrice('');
             setShowSellModal(false);
             setSelectedNFT(null);
@@ -271,6 +273,33 @@ export default function Inventory() {
             </div>
           )}
         </div>
+
+        {/* Success Modal */}
+        {success && (
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={() => setSuccess('')}
+          >
+            <div 
+              className="glass-dark border border-brand-purple/50 rounded-2xl p-8 max-w-md w-full animate-scale-in shadow-2xl shadow-brand-purple/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center border border-green-500/50">
+                  <span className="text-4xl">✓</span>
+                </div>
+                <h3 className="text-2xl font-bold text-green-400">NFT Listed Successfully!</h3>
+                <p className="text-slate-300">{success}</p>
+                <button
+                  onClick={() => setSuccess('')}
+                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 mt-4"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
@@ -412,35 +441,40 @@ export default function Inventory() {
           )}
         </div>
 
-        {/* NFT Detail Modal */}
+        {/* NFT Detail Modal - Modern Rectangle Design */}
         {selectedNFT && !showSellModal && (
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedNFT(null)}
           >
             <div 
-              className="glass-dark border border-brand-purple/30 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass-dark border border-brand-purple/30 rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl shadow-brand-purple/20"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold neon-text-glow">{selectedNFT.name}</h2>
+              {/* Header Bar */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-brand-purple/20 bg-gradient-to-r from-brand-purple/10 to-transparent">
+                <div>
+                  <h2 className="text-2xl font-bold neon-text-glow">{selectedNFT.name}</h2>
+                  <p className="text-slate-400 text-sm mt-1">Object ID: {truncateAddress(selectedNFT.itemId)}</p>
+                </div>
                 <button
                   onClick={() => setSelectedNFT(null)}
-                  className="text-slate-400 hover:text-white text-2xl"
+                  className="w-10 h-10 flex items-center justify-center glass-dark border border-brand-purple/30 rounded-lg hover:bg-brand-purple/20 transition-colors"
                 >
-                  ×
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                {/* Image */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative w-full max-w-[400px] h-[400px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
+              {/* Content Area - Split Layout */}
+              <div className="grid md:grid-cols-2 gap-6 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {/* Left Column - Image */}
+                <div className="space-y-4">
+                  <div className="relative w-full aspect-square glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30 group">
                     {selectedNFT.imageUrl && selectedNFT.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
                       <img
                         src={selectedNFT.imageUrl.startsWith('http') ? selectedNFT.imageUrl : `https://${selectedNFT.imageUrl}`}
                         alt={selectedNFT.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain transition-transform group-hover:scale-105"
                         onError={(e: any) => {
                           e.target.style.display = 'none';
                           const parent = e.target.parentElement;
@@ -456,60 +490,77 @@ export default function Inventory() {
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Details */}
-                <div className="space-y-3">
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Description</p>
-                    <p className="text-white">{selectedNFT.description}</p>
-                  </div>
-
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Creator</p>
-                    <p className="text-white font-mono text-sm">{truncateAddress(selectedNFT.creator)}</p>
-                  </div>
-
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Owner</p>
-                    <p className="text-white font-mono text-sm">{truncateAddress(selectedNFT.owner)}</p>
-                  </div>
-
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Object ID</p>
-                    <p className="text-white font-mono text-xs break-all">{selectedNFT.itemId}</p>
-                  </div>
-
-                  {selectedNFT.attributes && (
-                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                      <p className="text-slate-400 text-sm mb-1">Attributes</p>
-                      <p className="text-white text-sm">{selectedNFT.attributes}</p>
-                    </div>
-                  )}
-
-                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
-                    <p className="text-slate-400 text-sm mb-1">Item Type</p>
-                    <p className="text-white font-mono text-xs break-all">{selectedNFT.itemType}</p>
-                  </div>
-
-                  <div className="glass-dark rounded-lg p-4 border border-green-500/30 bg-green-500/10">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">✓</span>
+                  {/* Ownership Card - Featured */}
+                  <div className="glass-dark rounded-lg p-6 border border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-green-500/30 rounded-full flex items-center justify-center border border-green-500/50">
+                        <span className="text-2xl">✓</span>
+                      </div>
                       <div>
-                        <p className="text-green-400 font-semibold">You Own This NFT</p>
-                        <p className="text-slate-400 text-xs mt-1">This NFT is in your wallet and ready to be listed on the marketplace</p>
+                        <p className="text-green-400 font-bold text-lg">You Own This NFT</p>
+                        <p className="text-slate-400 text-xs">Ready to be listed on marketplace</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowSellModal(true)}
-                  className="w-full px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 mt-4"
-                >
-                  <Tag className="w-5 h-5" />
-                  List on Marketplace
-                </button>
+                {/* Right Column - Details */}
+                <div className="space-y-4">
+                  {/* Description */}
+                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                    <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Description</p>
+                    <p className="text-white leading-relaxed">{selectedNFT.description}</p>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Creator</p>
+                      <p className="text-white font-mono text-sm">{truncateAddress(selectedNFT.creator)}</p>
+                    </div>
+
+                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Owner</p>
+                      <p className="text-white font-mono text-sm">{truncateAddress(selectedNFT.owner)}</p>
+                    </div>
+                  </div>
+
+                  {/* Object ID */}
+                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                    <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Object ID</p>
+                    <p className="text-slate-300 font-mono text-xs break-all">{selectedNFT.itemId}</p>
+                  </div>
+
+                  {/* Attributes */}
+                  {selectedNFT.attributes && (
+                    <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                      <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Attributes</p>
+                      <p className="text-white text-sm">{selectedNFT.attributes}</p>
+                    </div>
+                  )}
+
+                  {/* Item Type */}
+                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/20">
+                    <p className="text-brand-purple text-xs uppercase tracking-wider mb-2 font-semibold">Item Type</p>
+                    <p className="text-slate-300 font-mono text-xs break-all">{selectedNFT.itemType}</p>
+                  </div>
+
+                  {/* Action Section */}
+                  <div className="glass-dark rounded-lg p-4 border border-brand-purple/30 bg-gradient-to-br from-brand-purple/10 to-transparent">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 bg-brand-purple rounded-full animate-pulse"></div>
+                      <p className="text-brand-purple text-xs uppercase tracking-wider font-semibold">Ready to List</p>
+                    </div>
+                    <button
+                      onClick={() => setShowSellModal(true)}
+                      className="w-full px-6 py-3 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-brand-purple/50 flex items-center justify-center gap-2"
+                    >
+                      <Tag className="w-5 h-5" />
+                      List on Marketplace
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
