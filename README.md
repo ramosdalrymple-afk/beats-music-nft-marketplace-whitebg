@@ -15,12 +15,14 @@ working endlessly and looking forward to
 the development of the Musicverse. 
 
 Vision
+
 Connect different art and music 
 enthusiasts around the world 
 together through mesmerizing NFTs 
 that are worth the value 
 
 Mission
+
 To offer a vibe of NFTs that are very 
 much worth the value and to 
 explore new types of NFT that are 
@@ -28,6 +30,7 @@ made not only to be collectibles
 but assets
 
 Why Beats?
+
 NFTs has brought an exciting era to the crypto world. 
 2021 is the year when NFTs became the mainstream. 
 It has federated the world of art and crypto. 
@@ -46,6 +49,7 @@ Beats, play-to-earn games and earning from
 listening to music. 
 
 Marketplace
+
 Beats Marketplace is the heart of the Beats' 
 project. It is created to support the project 
 perfectly. Designed to open doors to different 
@@ -61,6 +65,7 @@ great and bigger community of Beats
 Marketplace users.
 
 $SOUL Token
+
 $SOUL Token will be used to create, power 
 and sustain the Beats ecosystem.
 To this end the team has created a 
@@ -71,6 +76,7 @@ release rate compensated by a built-in
 token burn mechanism.
 
 Currency:
+
 $SOUL Token will serve as the basic currency 
 for Beats Marketplace. 
 Premium Services
