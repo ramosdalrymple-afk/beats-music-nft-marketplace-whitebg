@@ -1,11 +1,11 @@
-Beats is an interactive NFT Art Fair with a 
+**Beats** is an interactive NFT Art Fair with a 
 unique collection of 4,444. The project is a 
 combination of NFT with staking of NFT’s 
 and Play to Earn mechanics. The Beats 
 exhibits Soul Collection of famous and 
 legendary artists around the world. 
 
-Beats NFTs – Soul Collection – are inspired 
+**Beats NFTs – Soul Collection** – are inspired 
 by different kinds of music genre, featuring 
 the legendary musicians around the world 
 to pay tributes to their contribution to the 
@@ -14,14 +14,14 @@ with $SOUL Token. The team has been
 working endlessly and looking forward to 
 the development of the Musicverse. 
 
-Vision
+**Vision**
 
 Connect different art and music 
 enthusiasts around the world 
 together through mesmerizing NFTs 
 that are worth the value 
 
-Mission
+**Mission**
 
 To offer a vibe of NFTs that are very 
 much worth the value and to 
@@ -29,7 +29,7 @@ explore new types of NFT that are
 made not only to be collectibles 
 but assets
 
-Why Beats?
+**Why Beats?**
 
 NFTs has brought an exciting era to the crypto world. 
 2021 is the year when NFTs became the mainstream. 
@@ -48,7 +48,7 @@ exciting ways to maximize their digital earnings like
 Beats, play-to-earn games and earning from 
 listening to music. 
 
-Marketplace
+**Marketplace**
 
 Beats Marketplace is the heart of the Beats' 
 project. It is created to support the project 
@@ -64,7 +64,7 @@ amazing features, it is one step away from a
 great and bigger community of Beats 
 Marketplace users.
 
-$SOUL Token
+**$SOUL Token**
 
 $SOUL Token will be used to create, power 
 and sustain the Beats ecosystem.
@@ -75,7 +75,7 @@ development as well as healthy token
 release rate compensated by a built-in 
 token burn mechanism.
 
-Currency:
+**Currency:**
 
 $SOUL Token will serve as the basic currency 
 for Beats Marketplace. 
