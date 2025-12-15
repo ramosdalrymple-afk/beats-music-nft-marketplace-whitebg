@@ -24,6 +24,7 @@ export default function Inventory() {
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellPrice, setSellPrice] = useState('');
   const [sellLoading, setSellLoading] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     if (account) {
@@ -34,12 +35,23 @@ export default function Inventory() {
     }
   }, [client, account]);
 
+  // Auto-minimize when loading is complete
+  useEffect(() => {
+    if (!loading && (debugInfo || error)) {
+      const timer = setTimeout(() => {
+        setIsMinimized(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, debugInfo, error]);
+
   const fetchUserNFTs = async () => {
     if (!client || !account) return;
     
     setLoading(true);
     setError('');
     setDebugInfo('Fetching your NFT collection...');
+    setIsMinimized(false);
     
     try {
       // Get all objects owned by the user
@@ -183,6 +195,83 @@ export default function Inventory() {
           <p className="text-lg text-slate-300">Your collected beats and NFTs</p>
         </div>
 
+        {/* Status Messages - Fixed to Lower Left with Minimize */}
+        <div className="fixed bottom-6 left-6 z-40 space-y-3">
+          {debugInfo && (
+            <div 
+              className={`glass-dark rounded-xl border border-blue-500/40 shadow-2xl shadow-blue-500/20 backdrop-blur-xl transition-all duration-500 cursor-pointer ${
+                isMinimized ? 'w-12 h-12 p-0' : 'max-w-md p-4'
+              }`}
+              onClick={() => setIsMinimized(!isMinimized)}
+            >
+              {isMinimized ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <AlertCircle className="w-5 h-5 text-blue-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 animate-slide-in-left">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
+                    <AlertCircle className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-blue-400 text-sm font-bold mb-1">Status</p>
+                    <p className="text-slate-200 text-sm leading-relaxed">{debugInfo}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDebugInfo('');
+                      setIsMinimized(false);
+                    }}
+                    className="text-slate-400 hover:text-white transition-colors ml-2"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {error && (
+            <div 
+              className={`glass-dark rounded-xl border border-red-500/40 shadow-2xl shadow-red-500/20 backdrop-blur-xl transition-all duration-500 cursor-pointer ${
+                isMinimized ? 'w-12 h-12 p-0' : 'max-w-md p-4'
+              }`}
+              onClick={() => setIsMinimized(!isMinimized)}
+            >
+              {isMinimized ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 animate-slide-in-left">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 border border-red-500/30">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-red-400 text-sm font-bold mb-1">Error</p>
+                    <p className="text-slate-200 text-sm leading-relaxed">{error}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setError('');
+                      setIsMinimized(false);
+                    }}
+                    className="text-slate-400 hover:text-white transition-colors ml-2"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Main Content */}
         <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
           {!account ? (
@@ -216,32 +305,6 @@ export default function Inventory() {
                   </div>
                 </div>
               </div>
-
-              {/* Debug Info */}
-              {debugInfo && (
-                <div className="mb-4 glass-dark rounded-lg p-3 border border-blue-500/30">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-blue-400 text-sm font-semibold">Status:</p>
-                      <p className="text-slate-300 text-xs mt-1">{debugInfo}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error Message */}
-              {error && (
-                <div className="mb-4 glass-dark rounded-lg p-3 border border-red-500/30">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-red-400 text-sm font-semibold">Error:</p>
-                      <p className="text-slate-300 text-xs mt-1">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Search Bar */}
               <div className="mb-6">
