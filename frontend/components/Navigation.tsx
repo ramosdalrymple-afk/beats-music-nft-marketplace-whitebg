@@ -33,9 +33,9 @@ export default function Navigation() {
         {/* Top Bar */}
         <div className="py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 font-black text-lg sm:text-2xl hover:text-brand-purple transition shrink-0">
-            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-brand rounded-lg flex items-center justify-center">
+            {/* <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gradient-brand rounded-lg flex items-center justify-center">
               <span className="text-white text-base sm:text-lg">♪</span>
-            </div>
+            </div> */}
             <span className="neon-text-glow hidden sm:inline text-xl sm:text-2xl">BEATS</span>
           </Link>
 
