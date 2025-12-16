@@ -25,6 +25,8 @@ export default function BeatsTap() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
+  const BLOCKED_NFTS = new Set([
+  '0x1de1522f65eb06dab7e9a8497700067e24cc5c8fd4d178765b895f4e8c44dba5']);
 
   // Fetch listed music NFTs
   const fetchListedMusic = async () => {
@@ -113,7 +115,8 @@ export default function BeatsTap() {
             }
           });
 
-          const musicList = (await Promise.all(musicPromises)).filter(m => m !== null);
+          const musicList = (await Promise.all(musicPromises))
+            .filter(m => m !== null && !BLOCKED_NFTS.has(m.id));
           setListedMusic(musicList);
         }
       }
