@@ -228,7 +228,6 @@ export default function BeatsTap() {
     const handleEnded = () => {
       console.log('Audio ended');
       setIsPlaying(false);
-      // Music ended, counter will stop automatically
     };
 
     audio.addEventListener('play', handlePlay);
@@ -249,469 +248,576 @@ export default function BeatsTap() {
     }
   }, [isLooping]);
 
-  const startListening = async (nftId: string) => {
-    if (!account) {
-      setError('Please connect your wallet');
-      return;
-    }
+const startListening = async (nftId: string) => {
+  if (!account) {
+    setError('Please connect your wallet');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      const tx = new TransactionBlock();
-      tx.moveCall({
-        target: `${PACKAGE_ID}::music_marketplace::start_listening`,
-        arguments: [
-          tx.object(MARKETPLACE_ID),
-          tx.pure.id(nftId),
-          tx.object(CLOCK_ID),
-        ],
-      });
+  setLoading(true);
+  try {
+    const tx = new TransactionBlock();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::music_marketplace::start_listening`,
+      arguments: [
+        tx.object(MARKETPLACE_ID),
+        tx.pure.id(nftId),
+        tx.object(CLOCK_ID),
+      ],
+    });
 
-      signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
-        {
-          onSuccess: () => {
-            setSuccess('Started listening! Rewards are accumulating...');
-            const track = listedMusic.find(m => m.id === nftId);
-            setCurrentSession({ nftId, startTime: Date.now(), totalSeconds: 0, pendingRewards: 0 });
-            setPlayingTrack(track);
-            setListeningTime(0);
-            setPendingRewards(0);
+    signAndExecuteTransactionBlock(
+      { transactionBlock: tx },
+      {
+        onSuccess: () => {
+          setSuccess('Started listening! Rewards are accumulating...');
+          const track = listedMusic.find(m => m.id === nftId);
+          setCurrentSession({ nftId, startTime: Date.now(), totalSeconds: 0, pendingRewards: 0 });
+          setPlayingTrack(track);
+          setListeningTime(0);
+          setPendingRewards(0);
+          
+          if (audioRef.current && track?.audioUrl) {
+            console.log('Setting audio source:', track.audioUrl);
+            audioRef.current.src = track.audioUrl;
+            audioRef.current.load();
             
-            // Play audio
-            if (audioRef.current && track?.audioUrl) {
-              console.log('Setting audio source:', track.audioUrl);
-              audioRef.current.src = track.audioUrl;
-              audioRef.current.load();
-              
-              // Try to play with user interaction
-              const playPromise = audioRef.current.play();
-              if (playPromise !== undefined) {
-                playPromise
-                  .then(() => {
-                    console.log('Audio playing successfully');
-                    setIsPlaying(true);
-                  })
-                  .catch(err => {
-                    console.error('Audio play error:', err);
-                    setError('Failed to play audio. Click the play button to start.');
-                    setIsPlaying(false);
-                  });
-              }
-            } else {
-              console.warn('No audio URL or audio ref available');
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  console.log('Audio playing successfully');
+                  setIsPlaying(true);
+                })
+                .catch(err => {
+                  console.error('Audio play error:', err);
+                  setError('Failed to play audio. Click the play button to start.');
+                  setIsPlaying(false);
+                });
             }
-            
-            fetchListedMusic();
-          },
-          onError: (error: any) => {
-            setError(error.message || 'Failed to start listening');
-          },
-        }
-      );
-    } catch (err: any) {
-      setError(err.message || 'Failed to start listening');
-    } finally {
-      setLoading(false);
-    }
-  };
+          } else {
+            console.warn('No audio URL or audio ref available');
+          }
+          
+          fetchListedMusic();
+        },
+        onError: (error: any) => {
+          setError(error.message || 'Failed to start listening');
+        },
+      }
+    );
+  } catch (err: any) {
+    setError(err.message || 'Failed to start listening');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const updateListening = async () => {
-    if (!currentSession) return;
+const updateListening = async () => {
+  if (!currentSession) return;
 
-    setLoading(true);
-    try {
-      const tx = new TransactionBlock();
-      tx.moveCall({
-        target: `${PACKAGE_ID}::music_marketplace::update_listening`,
-        arguments: [
-          tx.object(MARKETPLACE_ID),
-          tx.pure.u64(10),
-          tx.object(CLOCK_ID),
-        ],
-      });
+  setLoading(true);
+  try {
+    const tx = new TransactionBlock();
+    tx.moveCall({
+      target: `${PACKAGE_ID}::music_marketplace::update_listening`,
+      arguments: [
+        tx.object(MARKETPLACE_ID),
+        tx.pure.u64(10),
+        tx.object(CLOCK_ID),
+      ],
+    });
 
-      signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
-        {
-          onSuccess: () => {
-            setSuccess('Listening time updated!');
-            checkActiveSession();
-          },
-          onError: (error: any) => {
-            setError(error.message || 'Failed to update listening');
-          },
-        }
-      );
-    } catch (err: any) {
-      setError(err.message || 'Failed to update listening');
-    } finally {
-      setLoading(false);
-    }
-  };
+    signAndExecuteTransactionBlock(
+      { transactionBlock: tx },
+      {
+        onSuccess: () => {
+          setSuccess('Listening time updated!');
+          checkActiveSession();
+        },
+        onError: (error: any) => {
+          setError(error.message || 'Failed to update listening');
+        },
+      }
+    );
+  } catch (err: any) {
+    setError(err.message || 'Failed to update listening');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const claimAndStop = async () => {
-    if (!currentSession) return;
+const claimAndStop = async () => {
+  if (!currentSession) return;
 
-    setLoading(true);
-    try {
-      const tx = new TransactionBlock();
-      
-      tx.moveCall({
-        target: `${PACKAGE_ID}::music_marketplace::update_listening`,
-        arguments: [
-          tx.object(MARKETPLACE_ID),
-          tx.pure.u64(Math.floor(listeningTime)),
-          tx.object(CLOCK_ID),
-        ],
-      });
-      
-      tx.moveCall({
-        target: `${PACKAGE_ID}::music_marketplace::claim_rewards`,
-        arguments: [tx.object(MARKETPLACE_ID)],
-      });
-      
-      tx.moveCall({
-        target: `${PACKAGE_ID}::music_marketplace::stop_listening`,
-        arguments: [tx.object(MARKETPLACE_ID)],
-      });
+  setLoading(true);
+  try {
+    const tx = new TransactionBlock();
+    
+    tx.moveCall({
+      target: `${PACKAGE_ID}::music_marketplace::update_listening`,
+      arguments: [
+        tx.object(MARKETPLACE_ID),
+        tx.pure.u64(Math.floor(listeningTime)),
+        tx.object(CLOCK_ID),
+      ],
+    });
+    
+    tx.moveCall({
+      target: `${PACKAGE_ID}::music_marketplace::claim_rewards`,
+      arguments: [tx.object(MARKETPLACE_ID)],
+    });
+    
+    tx.moveCall({
+      target: `${PACKAGE_ID}::music_marketplace::stop_listening`,
+      arguments: [tx.object(MARKETPLACE_ID)],
+    });
 
-      signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
-        {
-          onSuccess: () => {
-            setSuccess(`Claimed ${pendingRewards.toFixed(8)} SUI!`);
-            setCurrentSession(null);
-            setPlayingTrack(null);
-            setIsPlaying(false);
-            setListeningTime(0);
-            setPendingRewards(0);
-            
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-            }
-            
-            setTimeout(() => fetchListedMusic(), 2000);
-          },
-          onError: (error: any) => {
-            setError(error.message || 'Failed to claim and stop');
-          },
-        }
-      );
-    } catch (err: any) {
-      setError(err.message || 'Failed to claim and stop');
-    } finally {
-      setLoading(false);
-    }
-  };
+    signAndExecuteTransactionBlock(
+      { transactionBlock: tx },
+      {
+        onSuccess: () => {
+          setSuccess(`Claimed ${pendingRewards.toFixed(8)} SUI!`);
+          setCurrentSession(null);
+          setPlayingTrack(null);
+          setIsPlaying(false);
+          setListeningTime(0);
+          setPendingRewards(0);
+          
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          
+          setTimeout(() => fetchListedMusic(), 2000);
+        },
+        onError: (error: any) => {
+          setError(error.message || 'Failed to claim and stop');
+        },
+      }
+    );
+  } catch (err: any) {
+    setError(err.message || 'Failed to claim and stop');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const togglePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setIsPlaying(true);
-            })
-            .catch(err => {
-              console.error('Audio play error:', err);
-              setError('Failed to play audio. The audio file may be invalid or blocked.');
-            });
-        }
+const togglePlayPause = () => {
+  if (audioRef.current) {
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(err => {
+            console.error('Audio play error:', err);
+            setError('Failed to play audio. The audio file may be invalid or blocked.');
+          });
       }
     }
-  };
+  }
+};
 
-  const toggleLoop = () => {
-    setIsLooping(!isLooping);
-  };
+const toggleLoop = () => {
+  setIsLooping(!isLooping);
+};
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
-  return (
-    <>
-      <Head>
-        <title>Beats Tap - Listen to Earn | Beats</title>
-        <meta name="description" content="Earn SUI by listening to amazing music" />
-      </Head>
+return (
+  <>
+    <Head>
+      <title>Beats Tap - Listen to Earn | Beats</title>
+      <meta name="description" content="Earn SUI by listening to amazing music" />
+    </Head>
 
-      <div className="min-h-screen text-white space-y-8" style={{
-        background: 'linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(20, 24, 41, 0.95) 100%)',
-        padding: '2rem'
-      }}>
-        <audio ref={audioRef} crossOrigin="anonymous" />
+    <div className="min-h-screen text-white space-y-8" style={{
+      background: 'linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(20, 24, 41, 0.95) 100%)',
+      padding: '2rem'
+    }}>
+      <audio ref={audioRef} crossOrigin="anonymous" />
 
-        {/* Alerts */}
-        {error && (
-          <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-center justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-300">✕</button>
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 flex items-center justify-between">
-            <span>{success}</span>
-            <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-300">✕</button>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-black" style={{
-            background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 0 30px rgba(168, 85, 247, 0.5)'
-          }}>
-            Listen to Earn
-          </h1>
-          <p className="text-lg text-slate-300">
-            Beats Music is a Blockchain music where Holders can use their NFTs to earn SUI Token.
-          </p>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Player Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Current Session */}
-            {currentSession && playingTrack && (
-              <div className="rounded-lg p-6 border" style={{
-                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(6, 182, 212, 0.1))',
-                borderColor: 'rgba(168, 85, 247, 0.3)'
-              }}>
-                <h3 className="text-xl font-bold mb-4">Now Playing</h3>
-                <div className="flex items-center gap-4 mb-6">
-                  <img src={playingTrack.image} alt={playingTrack.title} className="w-24 h-24 rounded-lg object-cover shadow-lg" />
-                  <div className="flex-1">
-                    <h4 className="text-2xl font-bold">{playingTrack.title}</h4>
-                    <p className="text-slate-400">{playingTrack.artist}</p>
-                    <p className="text-sm mt-2" style={{ color: '#a855f7' }}>Earning 0.0000001 SUI per second</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={togglePlayPause}
-                      className="p-4 rounded-full transition-all hover:scale-110"
-                      style={{ background: 'linear-gradient(135deg, #a855f7, #06b6d4)' }}
-                    >
-                      {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                    </button>
-                    <button
-                      onClick={toggleLoop}
-                      className={`p-4 rounded-full transition-all hover:scale-110 ${isLooping ? 'ring-2 ring-white' : ''}`}
-                      style={{ 
-                        background: isLooping 
-                          ? 'linear-gradient(135deg, #f97316, #ef4444)' 
-                          : 'linear-gradient(135deg, #64748b, #475569)' 
-                      }}
-                      title={isLooping ? "Loop ON - Music will repeat" : "Loop OFF - Music plays once"}
-                    >
-                      <Repeat className="w-6 h-6" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-black/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-slate-400 mb-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">Listening Time</span>
-                    </div>
-                    <div className="text-2xl font-bold">{formatTime(listeningTime)}</div>
-                  </div>
-                  <div className="bg-black/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-slate-400 mb-2">
-                      <Coins className="w-4 h-4" />
-                      <span className="text-sm">Pending Rewards</span>
-                    </div>
-                    <div className="text-2xl font-bold" style={{ color: '#f97316' }}>{pendingRewards.toFixed(8)} SUI</div>
-                    <div className="text-xs text-slate-500 mt-1">{(pendingRewards * 1_000_000_000).toFixed(0)} MIST</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={updateListening}
-                      disabled={loading || !isPlaying}
-                      className="flex-1 py-2 px-4 rounded-lg font-semibold disabled:opacity-50 transition-all hover:scale-105"
-                      style={{ background: 'linear-gradient(135deg, #06b6d4, #a855f7)' }}
-                    >
-                      Update Time
-                    </button>
-                    <button
-                      onClick={claimAndStop}
-                      disabled={loading || pendingRewards === 0 || isPlaying}
-                      className="flex-1 py-2 px-4 rounded-lg font-semibold disabled:opacity-50 transition-all hover:scale-105"
-                      style={{ background: 'linear-gradient(135deg, #10b981, #f97316)' }}
-                    >
-                      {isPlaying ? 'Pause to Claim' : 'Claim & Stop'}
-                    </button>
-                  </div>
-                </div>
+      {/* Alerts */}
+      {/* Error Modal */}
+      {error && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.7)' }}>
+          <div className="bg-slate-900 border border-red-500/50 rounded-lg p-6 max-w-md w-full shadow-2xl animate-scale-in">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(239, 68, 68, 0.2)' }}>
+                <AlertCircle className="w-6 h-6 text-red-500" />
               </div>
-            )}
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white mb-2">Error</h3>
+                <p className="text-slate-300 text-sm">{error}</p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setError('')}
+                className="px-6 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-            {/* Available Music */}
-            <div className="rounded-lg p-6 border" style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              borderColor: 'rgba(148, 163, 184, 0.1)',
-              backdropFilter: 'blur(10px)'
-            }}>
+      {/* Success Modal */}
+      {success && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.7)' }}>
+          <div className="bg-slate-900 border border-green-500/50 rounded-lg p-6 max-w-md w-full shadow-2xl animate-scale-in">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
+                <Zap className="w-6 h-6 text-green-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white mb-2">Success!</h3>
+                <p className="text-slate-300 text-sm">{success}</p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSuccess('')}
+                className="px-6 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-4xl md:text-5xl font-black" style={{
+          background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textShadow: '0 0 30px rgba(168, 85, 247, 0.5)'
+        }}>
+          Listen to Earn
+        </h1>
+        <p className="text-lg text-slate-300">
+          Beats Music is a Blockchain music where Holders can use their NFTs to earn SUI Token.
+        </p>
+      </div>
+
+      {/* Stats Grid - Full Width */}
+<div className="grid md:grid-cols-2 gap-6">
+  
+  {/* Marketplace Stats */}
+  <div
+    className="rounded-lg p-4 border space-y-3"
+    style={{
+      background: 'rgba(15, 23, 42, 0.6)',
+      borderColor: 'rgba(168, 85, 247, 0.3)',
+      backdropFilter: 'blur(10px)',
+    }}
+  >
+    <h3 className="text-base font-semibold flex items-center gap-1.5">
+      <Award className="w-4 h-4" style={{ color: '#f97316' }} />
+      Marketplace Stats
+    </h3>
+
+    {/* Horizontal Stats */}
+    <div className="grid grid-cols-3 gap-4">
+      <div>
+        <p className="text-[10px] text-slate-500 uppercase font-semibold">
+          Total Music
+        </p>
+        <p className="text-2xl font-extrabold" style={{ color: '#06b6d4' }}>
+          {marketplaceStats.totalMusic - 1}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-[10px] text-slate-500 uppercase font-semibold">
+          Total Listens
+        </p>
+        <p className="text-2xl font-extrabold" style={{ color: '#a855f7' }}>
+          {marketplaceStats.totalListens}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-[10px] text-slate-500 uppercase font-semibold">
+          Distributed
+        </p>
+        <p className="text-xl font-extrabold" style={{ color: '#10b981' }}>
+          {marketplaceStats.totalRewards.toFixed(4)}
+        </p>
+        <p className="text-[10px] text-slate-500">SUI</p>
+      </div>
+    </div>
+  </div>
+
+  {/* Reward Pool */}
+  <div
+    className="rounded-lg p-4 border space-y-3"
+    style={{
+      background: 'rgba(15, 23, 42, 0.6)',
+      borderColor: 'rgba(249, 115, 22, 0.3)',
+      backdropFilter: 'blur(10px)',
+    }}
+  >
+    <h3 className="text-base font-semibold flex items-center gap-1.5">
+      <Zap className="w-4 h-4" style={{ color: '#f97316' }} />
+      Reward Pool
+    </h3>
+
+    {/* Horizontal Pool Info */}
+    <div
+      className="flex items-center justify-between divide-x"
+      style={{ borderColor: 'rgba(249, 115, 22, 0.2)' }}
+    >
+      <div className="px-3">
+        <p className="text-[10px] uppercase text-slate-500 font-semibold">
+          Available
+        </p>
+        <p className="text-2xl font-extrabold" style={{ color: '#f97316' }}>
+          {marketplaceStats.poolBalance.toFixed(4)}
+        </p>
+        <p className="text-[10px] text-slate-500">SUI</p>
+      </div>
+
+      <div className="px-3">
+        <p className="text-[10px] uppercase text-slate-500 font-semibold">
+          Earn Rate
+        </p>
+        <p className="text-sm font-bold" style={{ color: '#f97316' }}>
+          0.0000001
+        </p>
+        <p className="text-[10px] text-slate-500">SUI / sec</p>
+      </div>
+
+      <div className="px-3">
+        <p className="text-[10px] uppercase text-slate-500 font-semibold">
+          Rate (MIST)
+        </p>
+        <p className="text-sm font-bold text-slate-300">
+          100 / sec
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      
+      {/* Music Player Modal */}
+      {currentSession && playingTrack && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
+          <div className="bg-slate-900 rounded-lg border max-w-2xl w-full shadow-2xl animate-scale-in" style={{
+            borderColor: 'rgba(168, 85, 247, 0.5)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Available Music</h3>
+                <h3 className="text-xl font-bold">Now Playing</h3>
                 <button
-                  onClick={fetchListedMusic}
-                  disabled={loading}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  onClick={() => {
+                    if (isPlaying) {
+                      setError('Please pause the music before minimizing');
+                    }
+                  }}
+                  className="text-slate-400 hover:text-white transition-colors"
+                  title="Pause music to close"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
+                  ✕
                 </button>
               </div>
-              
-              {!account ? (
-                <div className="text-center py-12">
-                  <AlertCircle className="w-16 h-16 mx-auto mb-4" style={{ color: '#f97316' }} />
-                  <p className="text-slate-400">Connect your wallet to start listening</p>
+
+              <div className="flex items-center gap-4 mb-6">
+                <img src={playingTrack.image} alt={playingTrack.title} className="w-32 h-32 rounded-lg object-cover shadow-lg" />
+                <div className="flex-1">
+                  <h4 className="text-2xl font-bold">{playingTrack.title}</h4>
+                  <p className="text-slate-400">{playingTrack.artist}</p>
+                  <p className="text-sm mt-2" style={{ color: '#a855f7' }}>Earning 0.0000001 SUI per second</p>
                 </div>
-              ) : listedMusic.length === 0 ? (
-                <div className="text-center py-12">
-                  <Music className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400">No music listed yet</p>
+              </div>
+
+              <div className="flex justify-center gap-4 mb-6">
+                <button
+                  onClick={togglePlayPause}
+                  className="p-4 rounded-full transition-all hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, #a855f7, #06b6d4)' }}
+                >
+                  {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
+                </button>
+                <button
+                  onClick={toggleLoop}
+                  className={`p-4 rounded-full transition-all hover:scale-110 ${isLooping ? 'ring-2 ring-white' : ''}`}
+                  style={{ 
+                    background: isLooping 
+                      ? 'linear-gradient(135deg, #f97316, #ef4444)' 
+                      : 'linear-gradient(135deg, #64748b, #475569)' 
+                  }}
+                  title={isLooping ? "Loop ON - Music will repeat" : "Loop OFF - Music plays once"}
+                >
+                  <Repeat className="w-8 h-8" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-black/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">Listening Time</span>
+                  </div>
+                  <div className="text-2xl font-bold">{formatTime(listeningTime)}</div>
+                </div>  
+                <div className="bg-black/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <Coins className="w-4 h-4" />
+                    <span className="text-sm">Pending Rewards</span>
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: '#f97316' }}>{pendingRewards.toFixed(8)} SUI</div>
+                  <div className="text-xs text-slate-500 mt-1">{(pendingRewards * 1_000_000_000).toFixed(0)} MIST</div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {listedMusic.map((track) => (
-                    <div key={track.id} className="rounded-lg p-4 hover:bg-white/5 transition-all border border-white/10 group hover:border-purple-500/50">
-                      <img 
-                        src={track.image} 
-                        alt={track.title} 
-                        className="w-full h-40 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform"
-                        onError={(e: any) => {
-                          e.target.src = 'https://via.placeholder.com/300?text=No+Image';
-                        }}
-                      />
-                      <h4 className="font-bold mb-1">{track.title}</h4>
-                      <p className="text-sm text-slate-400 mb-1">{track.artist}</p>
-                      {track.description && (
-                        <p className="text-xs text-slate-500 mb-2 line-clamp-2">{track.description}</p>
-                      )}
-                      <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                        <span>🎧 {track.totalListens} plays</span>
-                        <span>⏱️ {Math.floor(track.totalListenTime / 60)}m</span>
-                      </div>
-                      <button
-                        onClick={() => startListening(track.id)}
-                        disabled={loading || currentSession !== null}
-                        className="w-full py-2 px-4 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-105"
-                        style={{ background: 'linear-gradient(135deg, #a855f7, #06b6d4)' }}
-                      >
-                        <Play className="w-4 h-4" />
-                        {currentSession ? 'Already Listening' : 'Start Listening'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={updateListening}
+                  disabled={loading || !isPlaying}
+                  className="w-full py-3 px-4 rounded-lg font-semibold disabled:opacity-50 transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #a855f7)' }}
+                >
+                  Update Time
+                </button>
+                <button
+                  onClick={claimAndStop}
+                  disabled={loading || pendingRewards === 0 || isPlaying}
+                  className="w-full py-3 px-4 rounded-lg font-semibold disabled:opacity-50 transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #f97316)' }}
+                >
+                  {isPlaying ? 'Pause to Claim' : 'Claim & Stop'}
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Sidebar Stats */}
-          <div className="space-y-6">
-            {/* Marketplace Stats */}
-            <div className="rounded-lg p-6 border space-y-4" style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              borderColor: 'rgba(168, 85, 247, 0.3)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <Award className="w-5 h-5" style={{ color: '#f97316' }} />
-                Marketplace Stats
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Total Music</p>
-                  <p className="text-3xl font-black" style={{ color: '#06b6d4' }}>{marketplaceStats.totalMusic}</p>
+      {/* Main Content */}
+      <div className="space-y-6">
+
+        {/* Main Content */}
+        {/* Available Music */}
+        <div className="rounded-lg p-6 border" style={{
+          background: 'rgba(15, 23, 42, 0.6)',
+          borderColor: 'rgba(148, 163, 184, 0.1)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Available Music</h3>
+            <button
+              onClick={fetchListedMusic}
+              disabled={loading}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
+          
+          {!account ? (
+            <div className="text-center py-12">
+              <AlertCircle className="w-16 h-16 mx-auto mb-4" style={{ color: '#f97316' }} />
+              <p className="text-slate-400">Connect your wallet to start listening</p>
+            </div>
+          ) : listedMusic.length === 0 ? (
+            <div className="text-center py-12">
+              <Music className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400">No music listed yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listedMusic.map((track) => (
+                <div key={track.id} className="rounded-lg p-4 hover:bg-white/5 transition-all border border-white/10 group hover:border-purple-500/50">
+                  <img 
+                    src={track.image} 
+                    alt={track.title} 
+                    className="w-full h-40 object-cover rounded-lg mb-3 group-hover:scale-105 transition-transform"
+                    onError={(e: any) => {
+                      e.target.src = 'https://via.placeholder.com/300?text=No+Image';
+                    }}
+                  />
+                  <h4 className="font-bold mb-1">{track.title}</h4>
+                  <p className="text-sm text-slate-400 mb-1">{track.artist}</p>
+                  {track.description && (
+                    <p className="text-xs text-slate-500 mb-2 line-clamp-2">{track.description}</p>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+                    <span>🎧 {track.totalListens} plays</span>
+                    <span>⏱️ {Math.floor(track.totalListenTime / 60)}m</span>
+                  </div>
+                  <button
+                    onClick={() => startListening(track.id)}
+                    disabled={loading || currentSession !== null}
+                    className="w-full py-2 px-4 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #a855f7, #06b6d4)' }}
+                  >
+                    <Play className="w-4 h-4" />
+                    {currentSession ? 'Already Listening' : 'Start Listening'}
+                  </button>
                 </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Total Listens</p>
-                  <p className="text-3xl font-black" style={{ color: '#a855f7' }}>{marketplaceStats.totalListens}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Total Distributed</p>
-                  <p className="text-2xl font-black" style={{ color: '#10b981' }}>{marketplaceStats.totalRewards.toFixed(8)} SUI</p>
-                  <p className="text-xs text-slate-500">{(marketplaceStats.totalRewards * 1_000_000_000).toFixed(0)} MIST</p>
-                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* How It Works */}
+        <div className="rounded-lg p-6 border space-y-4" style={{
+          background: 'rgba(15, 23, 42, 0.6)',
+          borderColor: 'rgba(6, 182, 212, 0.3)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" style={{ color: '#06b6d4' }} />
+            How It Works
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#a855f7' }}>1</div>
+              <div>
+                <p className="font-semibold">Start Listening</p>
+                <p className="text-slate-400 text-xs">Click any track to begin</p>
               </div>
             </div>
-
-            {/* Reward Pool */}
-            <div className="rounded-lg p-6 border space-y-4" style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              borderColor: 'rgba(249, 115, 22, 0.3)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <Zap className="w-5 h-5" style={{ color: '#f97316' }} />
-                Reward Pool
-              </h3>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Available Balance</p>
-                  <p className="text-3xl font-black" style={{ color: '#f97316' }}>{marketplaceStats.poolBalance.toFixed(8)} SUI</p>
-                  <p className="text-xs text-slate-500">{(marketplaceStats.poolBalance * 1_000_000_000).toFixed(0)} MIST</p>
-                </div>
-                <div className="pt-3 border-t" style={{ borderColor: 'rgba(249, 115, 22, 0.2)' }}>
-                  <p className="text-sm text-slate-400">Earn Rate: <span className="font-bold" style={{ color: '#f97316' }}>0.0000001 SUI/sec</span></p>
-                  <p className="text-xs text-slate-500 mt-1">100 MIST per second</p>
-                </div>
+            <div className="flex items-start gap-3">
+              <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#06b6d4' }}>2</div>
+              <div>
+                <p className="font-semibold">Earn Rewards</p>
+                <p className="text-slate-400 text-xs">100 MIST per second</p>
               </div>
             </div>
-
-            {/* How It Works */}
-            <div className="rounded-lg p-6 border space-y-4" style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              borderColor: 'rgba(6, 182, 212, 0.3)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" style={{ color: '#06b6d4' }} />
-                How It Works
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#a855f7' }}>1</div>
-                  <div>
-                    <p className="font-semibold">Start Listening</p>
-                    <p className="text-slate-400 text-xs">Click any track to begin</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#06b6d4' }}>2</div>
-                  <div>
-                    <p className="font-semibold">Earn Rewards</p>
-                    <p className="text-slate-400 text-xs">100 MIST per second</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#f97316' }}>3</div>
-                  <div>
-                    <p className="font-semibold">Claim Anytime</p>
-                    <p className="text-slate-400 text-xs">Get your SUI rewards</p>
-                  </div>
-                </div>
+            <div className="flex items-start gap-3">
+              <div className="rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0" style={{ background: '#f97316' }}>3</div>
+              <div>
+                <p className="font-semibold">Claim Anytime</p>
+                <p className="text-slate-400 text-xs">Get your SUI rewards</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
-  );
+    </div>
+  </>
+);
 }
