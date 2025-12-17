@@ -707,12 +707,7 @@ export default function BeatsTap() {
                         {isPlaying ? 'Pause to Claim' : 'Claim & Stop'}
                     </button>
                     
-                    <button 
-                        onClick={() => { if(!isPlaying) setPlayingTrack(null); else setError("Pause music to close"); }}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-red-400"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
+                    
                 </div>
              </div>
           </div>
@@ -721,4 +716,4 @@ export default function BeatsTap() {
       </div>
     </>
   );
-}
+} 
