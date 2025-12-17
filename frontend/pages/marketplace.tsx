@@ -356,11 +356,11 @@ export default function Marketplace() {
                 <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center border border-green-500/50">
                   <span className="text-4xl">✓</span>
                 </div>
-                <h3 className="text-2xl font-bold text-green-400">Purchase Successful!</h3>
+                <h3 className="text-2xl font-bold text-brand-purple">Purchase Successful!</h3>
                 <p className="text-slate-300">{success}</p>
                 <button
                   onClick={() => setSuccess('')}
-                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 mt-4"
+                  className="w-full px-6 py-3 bg-brand-purple hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 mt-4"
                 >
                   Close
                 </button>
@@ -503,10 +503,12 @@ export default function Marketplace() {
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedListing(null)}
           >
-            <div 
-              className="glass-dark border border-brand-purple/30 rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl shadow-brand-purple/20"
-              onClick={(e) => e.stopPropagation()}
-            >
+              <div 
+                // Changed max-w-5xl to max-w-3xl (makes width smaller)
+                // Changed max-h-[90vh] to max-h-[85vh] (makes height slightly smaller)
+                className="glass-dark border border-brand-purple/30 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl shadow-brand-purple/20"
+                onClick={(e) => e.stopPropagation()}
+              >
               {/* Header Bar */}
               <div className="flex justify-between items-center px-6 py-4 border-b border-brand-purple/20 bg-gradient-to-r from-brand-purple/10 to-transparent">
                 <div>
@@ -605,7 +607,7 @@ export default function Marketplace() {
                     </div>
                     <button
                       onClick={() => setShowBuyModal(true)}
-                      className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 flex items-center justify-center gap-2"
+                      className="w-full px-6 py-3 bg-brand-purple hover:bg-green-700 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/50 flex items-center justify-center gap-2"
                     >
                       <ShoppingCart className="w-5 h-5" />
                       Buy This Item
@@ -632,7 +634,7 @@ export default function Marketplace() {
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-green-400 mb-1">Buy NFT</h2>
+                  <h2 className="text-2xl font-bold text-brand-purple mb-1">Buy NFT</h2>
                   <p className="text-slate-400 text-sm">Confirm your purchase</p>
                 </div>
                 <button
@@ -708,7 +710,7 @@ export default function Marketplace() {
                   <button
                     onClick={handleBuyNFT}
                     disabled={buyLoading}
-                    className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-brand-purple hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
                     {buyLoading ? (
                       <>
