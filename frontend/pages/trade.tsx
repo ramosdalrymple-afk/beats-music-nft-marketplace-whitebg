@@ -6,9 +6,14 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Loader,
+  History,
+  Copy,
+  X,
+  Wallet,
+  Users,
+  Plus,
   RefreshCw,
-  History
+  Disc // Imported Disc icon for the empty state
 } from 'lucide-react';
 import { useCurrentAccount, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit';
 import { SuiClient } from '@mysten/sui.js/client';
@@ -17,7 +22,7 @@ import PendingView from '../components/PendingView';
 import ReceivedView from '../components/ReceivedView';
 import TradeHistoryView from '../components/TradeHistoryView';
 
-// Trading Configuration
+// --- Configuration ---
 export const TRADING_CONFIG = {
   PACKAGE_ID: '0x5281a724289520fadb5984c3686f8b63cf574d4820fcf584137a820516afa507',
   MODULE_NAME: 'trade',
@@ -25,17 +30,11 @@ export const TRADING_CONFIG = {
   NETWORK: 'testnet',
 };
 
-// ⚠️ IMPORTANT: Before the wallet prompt will show, you MUST:
-// 1. Replace 0xYOUR_PACKAGE_ID with your actual deployed package ID
-// 2. Make sure the MODULE_NAME matches your Move module name
-// 3. Ensure the function names (create_trade, accept_trade, etc.) match your contract
-
-// Initialize Sui Client
 const client = new SuiClient({
   url: `https://fullnode.${TRADING_CONFIG.NETWORK}.sui.io:443`,
 });
 
-// NFT Type
+// --- Types ---
 export interface NFT {
   id: string;
   name: string;
@@ -44,7 +43,23 @@ export interface NFT {
   type: string;
 }
 
-// Fetch NFTs function
+interface RecentTrader {
+  address: string;
+  lastSeen: number;
+}
+
+// --- Helper Components ---
+
+const TabBadge = ({ count }: { count: number }) => {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold text-white bg-brand-purple rounded-full shadow-sm">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+};
+
+// --- Data Fetching ---
 export const fetchNFTs = async (address: string, suiClient: SuiClient): Promise<NFT[]> => {
   try {
     const objects = await suiClient.getOwnedObjects({
@@ -82,28 +97,39 @@ type ViewType = 'browse' | 'pending' | 'received' | 'history';
 
 export default function Trade() {
   const account = useCurrentAccount();
-  const { mutate: signAndExecuteTransaction, isPending } = useSignAndExecuteTransactionBlock();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransactionBlock();
   
   const [view, setView] = useState<ViewType>('browse');
   const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingNFTs, setLoadingNFTs] = useState(false);
+  
+  // Notification States
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Load user's NFTs
+  // Badge Counters
+  const [counts, setCounts] = useState({ pending: 0, received: 0 });
+
+  // Recent Traders State
+  const [recentTraders, setRecentTraders] = useState<RecentTrader[]>([]);
+  const [loadingTraders, setLoadingTraders] = useState(false);
+
+  // Load user's NFTs & Recent Traders
   useEffect(() => {
     if (account?.address) {
       loadUserNFTs();
+      loadRecentTraders();
     } else {
       setUserNFTs([]);
+      setRecentTraders([]);
+      setCounts({ pending: 0, received: 0 });
     }
   }, [account, refreshTrigger]);
 
   const loadUserNFTs = async () => {
     if (!account?.address) return;
-    
     setLoadingNFTs(true);
     try {
       const nfts = await fetchNFTs(account.address, client);
@@ -116,20 +142,86 @@ export default function Trade() {
     }
   };
 
-  // Clear messages after 5 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(''), 5000);
-      return () => clearTimeout(timer);
+  // --- Fetch REAL transactions from blockchain ---
+  const loadRecentTraders = async () => {
+    if (!account?.address) return;
+    
+    setLoadingTraders(true);
+    try {
+      const response = await client.queryTransactionBlocks({
+        filter: { FromAddress: account.address },
+        options: {
+          showBalanceChanges: true,
+          showEvents: true,
+        },
+        limit: 30,
+        order: 'descending',
+      });
+
+      const interactions = new Map<string, number>();
+
+      response.data.forEach((tx) => {
+        const timestamp = Number(tx.timestampMs) || Date.now();
+        const otherAddresses = new Set<string>();
+
+        tx.balanceChanges?.forEach((change) => {
+          const owner = change.owner as any;
+          if (owner?.AddressOwner && owner.AddressOwner !== account.address) {
+            otherAddresses.add(owner.AddressOwner);
+          }
+        });
+
+        tx.events?.forEach((event) => {
+          const parsedJson = event.parsedJson as any;
+          if (parsedJson) {
+            Object.values(parsedJson).forEach((value) => {
+              if (
+                typeof value === 'string' &&
+                value.startsWith('0x') &&
+                value.length > 60 &&
+                value !== account.address &&
+                value !== TRADING_CONFIG.PACKAGE_ID
+              ) {
+                otherAddresses.add(value);
+              }
+            });
+          }
+        });
+
+        otherAddresses.forEach((addr) => {
+          if (!interactions.has(addr)) {
+            interactions.set(addr, timestamp);
+          }
+        });
+      });
+
+      const realTraders: RecentTrader[] = Array.from(interactions.entries())
+        .map(([address, lastSeen]) => ({ address, lastSeen }))
+        .sort((a, b) => b.lastSeen - a.lastSeen)
+        .slice(0, 10);
+
+      setRecentTraders(realTraders);
+    } catch (e) {
+      console.error('Failed to load recent traders', e);
+    } finally {
+      setLoadingTraders(false);
     }
-  }, [error]);
+  };
+
+  const copyToClipboard = (text: string, label: string = 'Copied to clipboard!') => {
+    navigator.clipboard.writeText(text);
+    setSuccess(label);
+  };
 
   useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(''), 5000);
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [success]);
+  }, [error, success]);
 
   return (
     <>
@@ -137,28 +229,43 @@ export default function Trade() {
         <title>NFT Trading Terminal - Beats</title>
       </Head>
 
-      <div className="min-h-screen text-slate-200 bg-[#0B0E14] font-sans pb-20">
+      <div className="min-h-screen text-slate-200 bg-[#0B0E14] font-sans pb-20 relative overflow-x-hidden">
         
         {/* TOP BAR */}
-        <div className="border-b border-white/5 bg-[#11141D] px-6 py-4">
+        <div className="border-b border-white/5 bg-[#11141D] px-6 py-4 sticky top-0 z-30 shadow-md">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-900 to-slate-900 flex items-center justify-center">
-                  <ArrowLeftRight className="w-6 h-6 text-brand-purple" />
+                {/* Logo Area: Styled like a Record Sleeve */}
+                <div className="w-12 h-12 rounded bg-gradient-to-br from-[#1A1D26] to-black border border-white/10 flex items-center justify-center shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-brand-purple/10 group-hover:bg-brand-purple/20 transition-colors" />
+                  <Disc className="w-6 h-6 text-brand-purple animate-spin-slow" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white tracking-tight">NFT Trading Terminal</h1>
-                  <p className="text-sm text-slate-400">Peer-to-peer NFT swaps on Sui</p>
+                  <h1 className="text-xl font-bold text-white tracking-tight">Beats Terminal</h1>
+                  <p className="text-sm text-slate-400">P2P Music Swap</p>
                 </div>
               </div>
 
-              {account && (
-                <div className="flex items-center gap-3 bg-[#0B0E14] px-4 py-2 rounded-lg border border-white/5">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-sm font-mono text-slate-300">
+              {account ? (
+                <button 
+                  onClick={() => copyToClipboard(account.address, 'Wallet address copied!')}
+                  className="group flex items-center gap-3 bg-[#0B0E14] px-4 py-2 rounded-lg border border-white/5 hover:border-brand-purple/50 transition-all cursor-pointer"
+                >
+                  <div className="flex gap-1 items-end h-3">
+                    <div className="w-1 h-1.5 bg-green-500 rounded-sm animate-[bounce_1s_infinite]" />
+                    <div className="w-1 h-3 bg-green-500 rounded-sm animate-[bounce_1.2s_infinite]" />
+                    <div className="w-1 h-2 bg-green-500 rounded-sm animate-[bounce_0.8s_infinite]" />
+                  </div>
+                  <span className="text-sm font-mono text-slate-300 group-hover:text-white transition-colors">
                     {account.address.slice(0, 6)}...{account.address.slice(-4)}
                   </span>
+                  <Copy className="w-3.5 h-3.5 text-slate-500 group-hover:text-brand-purple transition-colors" />
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div className="w-2 h-2 bg-red-400 rounded-full" />
+                  Not Connected
                 </div>
               )}
             </div>
@@ -166,128 +273,189 @@ export default function Trade() {
         </div>
 
         {/* NAVIGATION TABS */}
-        <div className="border-b border-white/5 bg-[#11141D]">
+        <div className="border-b border-white/5 bg-[#11141D] sticky top-[80px] z-20">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex gap-1">
+            <div className="flex gap-1 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setView('browse')}
-                className={`px-6 py-3 text-sm font-medium transition-all relative ${
+                className={`px-6 py-4 text-sm font-medium transition-all relative whitespace-nowrap ${
                   view === 'browse'
                     ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                 }`}
               >
                 Browse & Create
                 {view === 'browse' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
                 )}
               </button>
+
               <button
                 onClick={() => setView('pending')}
-                className={`px-6 py-3 text-sm font-medium transition-all relative ${
+                className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'pending'
                     ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Pending Trades
-                </div>
+                <Clock className="w-4 h-4" />
+                Pending Trades
+                <TabBadge count={counts.pending} />
                 {view === 'pending' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
                 )}
               </button>
+
               <button
                 onClick={() => setView('received')}
-                className={`px-6 py-3 text-sm font-medium transition-all relative ${
+                className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'received'
                     ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <ArrowLeftRight className="w-4 h-4" />
-                  Received Offers
-                </div>
+                <ArrowLeftRight className="w-4 h-4" />
+                Received Offers
+                <TabBadge count={counts.received} />
                 {view === 'received' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
                 )}
               </button>
+
               <button
                 onClick={() => setView('history')}
-                className={`px-6 py-3 text-sm font-medium transition-all relative ${
+                className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'history'
                     ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Trade History
-                </div>
+                <History className="w-4 h-4" />
+                Trade History
                 {view === 'history' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
                 )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* ERROR/SUCCESS MESSAGES */}
-        {error && (
-          <div className="max-w-7xl mx-auto px-6 pt-4">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
-              <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-red-400 text-sm font-medium">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {success && (
-          <div className="max-w-7xl mx-auto px-6 pt-4">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-green-400 text-sm font-medium">{success}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* MAIN CONTENT */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6 py-8 min-h-[500px]">
           {!account ? (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-brand-purple/10 flex items-center justify-center">
-                <ArrowLeftRight className="w-10 h-10 text-brand-purple" />
+            <div className="flex flex-col items-center justify-center py-32 animate-in fade-in zoom-in duration-500">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-brand-purple/20 rounded-full blur-xl" />
+                <div className="w-24 h-24 relative rounded-full bg-[#1A1D26] border border-white/10 flex items-center justify-center mb-8 shadow-2xl">
+                  <Wallet className="w-10 h-10 text-slate-400" />
+                </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-slate-400 mb-6">Connect your wallet to start trading NFTs</p>
-              <button className="px-8 py-3 bg-brand-purple hover:bg-brand-purple/90 rounded-lg font-semibold text-white transition-all">
-                Connect Wallet
-              </button>
+              <h2 className="text-3xl font-bold text-white mb-3">Connect Your Wallet</h2>
+              <p className="text-slate-400 mb-8 text-center max-w-md">
+                Connect your Sui wallet to view your NFTs, create swaps, and manage your trade offers securely.
+              </p>
+              <div className="px-6 py-3 bg-white/5 rounded-lg border border-dashed border-white/10 text-slate-500 text-sm">
+                Use the wallet button in the navigation bar to connect
+              </div>
             </div>
           ) : (
-            <>
+            <div className="animate-in slide-in-from-bottom-4 duration-300">
               {view === 'browse' && (
-                <BrowseView
-                  account={account}
-                  client={client}
-                  userNFTs={userNFTs}
-                  loading={loading}
-                  setLoading={setLoading}
-                  setError={setError}
-                  setSuccess={setSuccess}
-                  signAndExecuteTransaction={signAndExecuteTransaction}
-                  loadingNFTs={loadingNFTs}
-                  setLoadingNFTs={setLoadingNFTs}
-                  setView={setView}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                />
+                <>
+                  {/* RECENT TRADERS SECTION (Vinyl Style) */}
+                  <div className="mb-8">
+                     <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                           <Disc className="w-4 h-4 text-brand-purple" />
+                           Recent Sessions
+                        </h3>
+                        <button 
+                          onClick={loadRecentTraders}
+                          disabled={loadingTraders}
+                          className="p-1.5 text-slate-500 hover:text-white bg-white/5 rounded-md transition-colors"
+                          title="Refresh Recent Traders"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${loadingTraders ? 'animate-spin' : ''}`} />
+                        </button>
+                     </div>
+                     
+                     {recentTraders.length > 0 ? (
+                       <div className="flex gap-5 overflow-x-auto pb-6 pt-2 px-1 no-scrollbar">
+                         
+                         {/* Create New Trade Button */}
+                         <button 
+                           onClick={() => setView('browse')} 
+                           className="flex-shrink-0 flex flex-col items-center gap-2 group"
+                         >
+                           <div className="w-14 h-14 rounded-full border border-dashed border-white/20 flex items-center justify-center bg-white/5 group-hover:border-brand-purple group-hover:bg-brand-purple/10 transition-all duration-300">
+                             <Plus className="w-5 h-5 text-slate-400 group-hover:text-brand-purple" />
+                           </div>
+                           <span className="text-[11px] font-medium text-slate-500 group-hover:text-slate-300">New Mix</span>
+                         </button>
+
+                         {/* VINYL RECORD AVATARS */}
+                         {recentTraders.map((trader, idx) => (
+                           <button
+                             key={`${trader.address}-${idx}`}
+                             onClick={() => copyToClipboard(trader.address, 'Address copied!')}
+                             className="flex-shrink-0 group relative flex flex-col items-center gap-2 transition-transform hover:-translate-y-1"
+                           >
+                             {/* The Vinyl Disc Container */}
+                             <div className="relative w-16 h-16 rounded-full bg-[#080808] shadow-lg border border-white/5 group-hover:scale-105 transition-all duration-300 flex items-center justify-center">
+                               {/* Subtle Vinyl Grooves */}
+                               <div className="absolute inset-0 rounded-full border-2 border-white/5 opacity-10 pointer-events-none scale-90" />
+                               <div className="absolute inset-0 rounded-full border-2 border-white/5 opacity-10 pointer-events-none scale-75" />
+                               
+                               {/* The "Label" (Album Art Avatar) */}
+                               <div className="w-10 h-10 rounded-full overflow-hidden group-hover:rotate-[360deg] transition-transform duration-[3s] ease-linear">
+                                  {/* Using 'shapes' style for abstract album art look */}
+                                  <img 
+                                    src={`https://api.dicebear.com/7.x/shapes/svg?seed=${trader.address}&backgroundColor=1a1d26`}
+                                    alt="User Label"
+                                    className="w-full h-full object-cover opacity-90"
+                                  />
+                               </div>
+
+                               {/* The Spindle Hole */}
+                               <div className="absolute w-1.5 h-1.5 bg-[#0B0E14] rounded-full ring-1 ring-white/20 z-10" />
+                               
+                               {/* Status Light (Green LED) */}
+                               <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] border border-[#0B0E14]" />
+                             </div>
+
+                             {/* Metadata */}
+                             <div className="flex flex-col items-center mt-1">
+                               <span className="text-[10px] font-bold text-slate-300 font-mono group-hover:text-brand-purple transition-colors">
+                                 {trader.address.slice(0, 4)}...{trader.address.slice(-2)}
+                               </span>
+                             </div>
+                           </button>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="text-sm text-slate-500 italic py-6 border border-dashed border-white/10 rounded-lg text-center bg-white/5 flex flex-col items-center gap-2">
+                         <span>No recent sessions found on-chain.</span>
+                         {loadingTraders && <span className="text-xs animate-pulse text-brand-purple">Scanning frequencies...</span>}
+                       </div>
+                     )}
+                  </div>
+
+                  <BrowseView
+                    account={account}
+                    client={client}
+                    userNFTs={userNFTs}
+                    loading={loading}
+                    setLoading={setLoading}
+                    setError={setError}
+                    setSuccess={setSuccess}
+                    signAndExecuteTransaction={signAndExecuteTransaction}
+                    loadingNFTs={loadingNFTs}
+                    setLoadingNFTs={setLoadingNFTs}
+                    setView={setView}
+                    refreshTrigger={refreshTrigger}
+                    setRefreshTrigger={setRefreshTrigger}
+                  />
+                </>
               )}
 
               {view === 'pending' && (
@@ -321,9 +489,33 @@ export default function Trade() {
                   TRADING_CONFIG={TRADING_CONFIG}
                 />
               )}
-            </>
+            </div>
           )}
         </div>
+
+        {/* TOAST NOTIFICATIONS */}
+        <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3 pointer-events-none">
+          {error && (
+            <div className="pointer-events-auto bg-[#1A1D26] border-l-4 border-red-500 text-slate-200 px-5 py-4 rounded-r shadow-2xl shadow-black/50 flex items-start gap-3 min-w-[320px] max-w-md animate-in slide-in-from-right duration-300">
+              <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">{error}</div>
+              <button onClick={() => setError('')} className="text-slate-500 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {success && (
+            <div className="pointer-events-auto bg-[#1A1D26] border-l-4 border-green-500 text-slate-200 px-5 py-4 rounded-r shadow-2xl shadow-black/50 flex items-start gap-3 min-w-[320px] max-w-md animate-in slide-in-from-right duration-300">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm">{success}</div>
+              <button onClick={() => setSuccess('')} className="text-slate-500 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
     </>
   );
