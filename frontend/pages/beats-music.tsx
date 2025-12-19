@@ -92,64 +92,83 @@ export default function BeatsMusic() {
     return [...favorites, ...nonFavorites];
   };
 
-  const fetchUserNFTs = async () => {
-    if (!client || !account) return;
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const ownedObjects = await client.getOwnedObjects({
+const fetchUserNFTs = async () => {
+  if (!client || !account) return;
+
+  setLoading(true);
+  setError('');
+
+  try {
+    let allObjects: any[] = [];
+    let cursor: string | null = null;
+    let hasNextPage = true;
+
+    // 🔁 PAGINATION LOOP
+    while (hasNextPage) {
+      const response = await client.getOwnedObjects({
         owner: account.address,
+        cursor,
+        limit: 50,
         options: {
           showContent: true,
           showType: true,
         },
       });
 
-      const musicNFTs: Track[] = [];
-      
-      for (const obj of ownedObjects.data) {
-        try {
-          const objData = obj.data;
-          
-          if (objData?.type && objData.type.includes('music_nft::MusicNFT')) {
-            const nftContent = objData.content?.fields || {};
-            
-            if (nftContent.music_url) {
-              musicNFTs.push({
-                id: objData.objectId,
-                title: nftContent.name || 'Unknown Track',
-                artist: nftContent.creator ? `${nftContent.creator.slice(0, 6)}...${nftContent.creator.slice(-4)}` : 'Unknown Artist',
-                duration: 180,
-                album: nftContent.attributes || 'Beats Collection',
-                color: colors[musicNFTs.length % colors.length],
-                musicUrl: nftContent.music_url.startsWith('http') ? nftContent.music_url : `https://${nftContent.music_url}`,
-                imageUrl: nftContent.image_url 
-                  ? (nftContent.image_url.startsWith('http') ? nftContent.image_url : `https://${nftContent.image_url}`)
-                  : '',
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Error processing NFT:', err);
-        }
-      }
-
-      if (musicNFTs.length === 0) {
-        setError('No music NFTs found in your wallet. Mint or purchase music NFTs to start listening!');
-      }
-
-      const sortedTracks = sortTracksByFavorites(musicNFTs);
-      setTracks(sortedTracks);
-      
-    } catch (err: any) {
-      console.error('Error fetching NFTs:', err);
-      setError(err.message || 'Failed to fetch your music NFTs');
-    } finally {
-      setLoading(false);
+      allObjects.push(...response.data);
+      cursor = response.nextCursor;
+      hasNextPage = response.hasNextPage;
     }
-  };
+
+    const musicNFTs: Track[] = [];
+
+    for (const obj of allObjects) {
+      try {
+        const objData = obj.data;
+
+        if (objData?.type?.includes('music_nft::MusicNFT')) {
+          const nftContent = objData.content?.fields || {};
+
+          if (nftContent.music_url) {
+            musicNFTs.push({
+              id: objData.objectId,
+              title: nftContent.name || 'Unknown Track',
+              artist: nftContent.creator
+                ? `${nftContent.creator.slice(0, 6)}...${nftContent.creator.slice(-4)}`
+                : 'Unknown Artist',
+              duration: 180, // will be updated when metadata loads
+              album: nftContent.attributes || 'Beats Collection',
+              color: colors[musicNFTs.length % colors.length],
+              musicUrl: nftContent.music_url.startsWith('http')
+                ? nftContent.music_url
+                : `https://${nftContent.music_url}`,
+              imageUrl: nftContent.image_url
+                ? (nftContent.image_url.startsWith('http')
+                    ? nftContent.image_url
+                    : `https://${nftContent.image_url}`)
+                : '',
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error processing NFT:', err);
+      }
+    }
+
+    if (musicNFTs.length === 0) {
+      setError('No music NFTs found in your wallet. Mint or purchase music NFTs to start listening!');
+    }
+
+    const sortedTracks = sortTracksByFavorites(musicNFTs);
+    setTracks(sortedTracks);
+
+  } catch (err: any) {
+    console.error('Error fetching NFTs:', err);
+    setError(err.message || 'Failed to fetch your music NFTs');
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (audioRef.current && currentTrack) {
