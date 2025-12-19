@@ -14,6 +14,8 @@ use sui::table::{Self, Table};
 const EAmountIncorrect: u64 = 0;
 /// For when someone tries to delist without ownership.
 const ENotOwner: u64 = 1;
+/// For when listing does not exist.
+const EListingNotFound: u64 = 2;
 
 /// A shared `Marketplace`. Can be created by anyone using the
 /// `create` function. One instance of `Marketplace` accepts
@@ -152,4 +154,68 @@ public fun take_profits_and_keep<COIN>(
         take_profits(marketplace, ctx),
         ctx.sender(),
     )
+}
+
+// ===== View Functions =====
+
+/// View a specific listing's details by item ID.
+/// Returns the ask price and owner address.
+public fun view_listing<COIN>(
+    marketplace: &Marketplace<COIN>,
+    item_id: ID,
+): (u64, address) {
+    let listing = marketplace.items.borrow<ID, Listing>(item_id);
+    (listing.ask, listing.owner)
+}
+
+/// Check if a listing exists for a given item ID.
+public fun listing_exists<COIN>(
+    marketplace: &Marketplace<COIN>,
+    item_id: ID,
+): bool {
+    marketplace.items.contains(item_id)
+}
+
+/// Get the ask price for a specific listing.
+public fun get_ask_price<COIN>(
+    marketplace: &Marketplace<COIN>,
+    item_id: ID,
+): u64 {
+    marketplace.items.borrow<ID, Listing>(item_id).ask
+}
+
+/// Get the owner of a specific listing.
+public fun get_listing_owner<COIN>(
+    marketplace: &Marketplace<COIN>,
+    item_id: ID,
+): address {
+    marketplace.items.borrow<ID, Listing>(item_id).owner
+}
+
+/// Check if an address has pending payments to collect.
+public fun has_pending_payment<COIN>(
+    marketplace: &Marketplace<COIN>,
+    owner: address,
+): bool {
+    marketplace.payments.contains(owner)
+}
+
+/// Get the pending payment amount for an address.
+/// Returns 0 if no payment exists.
+public fun get_pending_payment<COIN>(
+    marketplace: &Marketplace<COIN>,
+    owner: address,
+): u64 {
+    if (marketplace.payments.contains(owner)) {
+        marketplace.payments.borrow(owner).value()
+    } else {
+        0
+    }
+}
+
+/// Get the total number of listings in the marketplace.
+public fun get_listing_count<COIN>(
+    marketplace: &Marketplace<COIN>,
+): u64 {
+    marketplace.items.length()
 }
