@@ -8,6 +8,9 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 // Use your existing package ID
 const PACKAGE_ID = '0x08ac46b00eb814de6e803b7abb60b42abbaf49712314f4ed188f4fea6d4ce3ec';
 const MARKETPLACE_ID = '0xb9aa59546415a92290e60ad5d90a9d0b013da1b3daa046aba44a0be113a83b84';
+const NEW_PACKAGE_ID = "0xef31a73e2b31f94fc64fba29c65482857ef60c30a10932da7e86c74f9a9a4ac8";
+const NEW_COLLECTION_ID = "0xb0d2997345aed39db636afb6f66f96e660aef921f0eb7a440e412afe69285d05";
+
 const COIN_TYPE = '0x2::sui::SUI';
 
 export default function Inventory() {
@@ -46,72 +49,80 @@ export default function Inventory() {
     }
   }, [loading, debugInfo, error]);
 
-  const fetchUserNFTs = async () => {
-    if (!client || !account) return;
-    
-    setLoading(true);
-    setError('');
-    setDebugInfo('Fetching your NFT collection...');
-    setIsMinimized(false);
-    
-    try {
-      // Get all objects owned by the user
-      const ownedObjects = await client.getOwnedObjects({
+const fetchUserNFTs = async () => {
+  if (!client || !account) return;
+
+  setLoading(true);
+  setError('');
+  setDebugInfo('Fetching your NFT collection...');
+  setIsMinimized(false);
+
+  try {
+    let allObjects: any[] = [];
+    let cursor: string | null = null;
+    let hasNextPage = true;
+
+    // 🔁 PAGINATION LOOP (THIS IS THE FIX)
+    while (hasNextPage) {
+      const response = await client.getOwnedObjects({
         owner: account.address,
+        cursor,
+        limit: 50, // safe max
         options: {
           showContent: true,
           showType: true,
         },
       });
 
-      console.log('Owned objects:', ownedObjects);
-      setDebugInfo(`Found ${ownedObjects.data.length} total objects`);
-
-      // Filter for MusicNFT objects
-      const musicNFTs = [];
-      
-      for (const obj of ownedObjects.data) {
-        try {
-          const objData = obj.data;
-          
-          // Check if this is a MusicNFT by looking at the type
-          if (objData?.type && objData.type.includes('music_nft::MusicNFT')) {
-            const nftContent = objData.content?.fields || {};
-            
-            console.log('Found MusicNFT:', {
-              objectId: objData.objectId,
-              content: nftContent
-            });
-
-            musicNFTs.push({
-              itemId: objData.objectId,
-              name: nftContent.name || 'Unknown NFT',
-              description: nftContent.description || 'No description',
-              imageUrl: nftContent.image_url || 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT',
-              musicUrl: nftContent.music_url || '',
-              creator: nftContent.creator || 'Unknown',
-              attributes: nftContent.attributes || '',
-              itemType: objData.type,
-              isListed: false, // Not listed in marketplace
-              owner: account.address,
-            });
-          }
-        } catch (err) {
-          console.error('Error processing object:', err);
-        }
-      }
-
-      setDebugInfo(`Successfully loaded ${musicNFTs.length} Music NFTs from your wallet`);
-      setNfts(musicNFTs);
-      
-    } catch (err: any) {
-      console.error('Error fetching NFTs:', err);
-      setError(err.message || 'Failed to fetch your NFT collection');
-      setDebugInfo(`Error: ${err.message}`);
-    } finally {
-      setLoading(false);
+      allObjects.push(...response.data);
+      cursor = response.nextCursor;
+      hasNextPage = response.hasNextPage;
     }
-  };
+
+    console.log('All owned objects:', allObjects);
+    setDebugInfo(`Found ${allObjects.length} total objects`);
+
+    // Filter MusicNFTs
+    const musicNFTs: any[] = [];
+
+    for (const obj of allObjects) {
+      try {
+        const objData = obj.data;
+
+        if (objData?.type?.includes('music_nft::MusicNFT')) {
+          const nftContent = objData.content?.fields || {};
+
+          musicNFTs.push({
+            itemId: objData.objectId,
+            name: nftContent.name || 'Unknown NFT',
+            description: nftContent.description || 'No description',
+            imageUrl:
+              nftContent.image_url ||
+              'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT',
+            musicUrl: nftContent.music_url || '',
+            creator: nftContent.creator || 'Unknown',
+            attributes: nftContent.attributes || '',
+            itemType: objData.type,
+            isListed: false,
+            owner: account.address,
+          });
+        }
+      } catch (err) {
+        console.error('Error processing object:', err);
+      }
+    }
+
+    setNfts(musicNFTs);
+    setDebugInfo(`Successfully loaded ${musicNFTs.length} Music NFTs`);
+
+  } catch (err: any) {
+    console.error('Error fetching NFTs:', err);
+    setError(err.message || 'Failed to fetch your NFT collection');
+    setDebugInfo(`Error: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSellNFT = async () => {
     if (!selectedNFT || !sellPrice || !account) {
