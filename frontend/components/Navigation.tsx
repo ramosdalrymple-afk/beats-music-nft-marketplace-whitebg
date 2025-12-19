@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
 import { ConnectButton } from '@mysten/dapp-kit';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, Gift } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navigation() {
@@ -11,13 +11,13 @@ export default function Navigation() {
   const { mutate: disconnect } = useDisconnectWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Added 'Perks' to the tabs array
+  // Removed 'Perks' from here so it doesn't show in the center
   const tabs = [
     { name: 'Home', path: '/' },
     { name: 'Gallery', path: '/gallery' },
     { name: 'Marketplace', path: '/marketplace' },
     { name: 'Inventory', path: '/inventory' },
-    { name: 'Trade', path: '/trade' }, // <--- Added Perk Section here
+    { name: 'Trade', path: '/trade' },
     { name: 'Beats Tap', path: '/beats-tap' },
     { name: 'Beats Music', path: '/beats-music' },
   ];
@@ -38,9 +38,8 @@ export default function Navigation() {
             <span className="neon-text-glow hidden sm:inline text-xl sm:text-2xl">BEATS</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation (Center) */}
           <div className="hidden md:flex items-center gap-6 lg:gap-8 flex-1">
-            {/* Tab Navigation - Desktop */}
             <div className="flex items-center gap-1 flex-wrap justify-center flex-1">
               {tabs.map((tab) => (
                 <Link
@@ -58,8 +57,23 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Desktop Wallet */}
-          <div className="hidden md:block shrink-0">
+          {/* Desktop Utility Area (Right Side) */}
+          <div className="hidden md:flex items-center gap-3 shrink-0">
+            
+            {/* NEW PERKS BUTTON - Placed next to wallet */}
+            <Link 
+              href="/perks"
+              className={`flex items-center gap-2 px-3 py-2 rounded-full border transition text-sm font-bold ${
+                isActive('/perks') 
+                  ? 'bg-brand-purple/20 border-brand-purple text-white shadow-brand glow-brand' 
+                  : 'bg-black/20 border-brand-purple/30 text-brand-cyan hover:border-brand-cyan hover:bg-brand-cyan/10'
+              }`}
+            >
+              <Gift className="w-4 h-4" />
+              <span>Perks</span>
+            </Link>
+
+            {/* Wallet Section */}
             {account ? (
               <div className="flex items-center gap-2 sm:gap-3 glass-dark rounded-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border border-brand-purple/30 hover:border-brand-purple/60 transition text-xs sm:text-sm">
                 <div className="w-5 sm:w-6 h-5 sm:h-6 rounded-full bg-gradient-purple-orange flex items-center justify-center text-xs font-black text-white shrink-0">
@@ -78,7 +92,7 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Mobile Hamburger Menu */}
+          {/* Mobile Hamburger Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -93,11 +107,26 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Expanded */}
         {isMenuOpen && (
           <div className="md:hidden pb-4 border-t border-brand-purple/20">
-            {/* Mobile Tabs */}
             <div className="py-4 space-y-2">
+              
+              {/* Added Perks to Mobile Menu manually since we removed it from tabs */}
+              <Link
+                href="/perks"
+                onClick={() => setIsMenuOpen(false)}
+                className={`block px-4 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 ${
+                  isActive('/perks')
+                    ? 'bg-gradient-brand text-white shadow-brand glow-brand'
+                    : 'text-brand-cyan border border-brand-purple/20 hover:border-brand-purple/50'
+                }`}
+              >
+                <Gift className="w-4 h-4" />
+                Perks
+              </Link>
+
+              {/* Standard Tabs */}
               {tabs.map((tab) => (
                 <Link
                   key={tab.path}
