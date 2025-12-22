@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Environment files
+.env
+.env*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archive files
+*.tar
+*.gz
+*.tar.gz
+*.tgz
+*.zip
+
+# Docker volumes
+nginx/certbot/
+
+# Temporary files
+tmp/
+temp/
+.cache/

@@ -6,3 +6,10 @@ build/
 .DS_Store
 .env.local
 .env.*.local
+
+# Archive files
+*.tar
+*.gz
+*.tar.gz
+*.tgz
+*.zip
