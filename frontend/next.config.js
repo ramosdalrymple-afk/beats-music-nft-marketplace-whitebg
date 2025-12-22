@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Enable standalone output for Docker optimization
+  output: 'standalone',
+
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

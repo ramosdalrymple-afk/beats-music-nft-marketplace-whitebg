@@ -6,15 +6,17 @@
 html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  background: #ffffff;
 }
 
 * {
-  @apply border-dark-secondary;
+  @apply border-gray-200;
 }
 
 body {
-  @apply bg-dark-base text-white;
-  background: linear-gradient(135deg, #0a0e27 0%, #141829 50%, #0f1a35 100%);
+  @apply bg-white text-gray-900;
+  background: #ffffff;
+  min-height: 100vh;
 }
 
 button {
@@ -74,17 +76,17 @@ textarea {
   @apply text-transparent bg-clip-text bg-gradient-brand;
 }
 
-/* Glassmorphism - Dark Mode */
+/* Glassmorphism - Light Mode with Enhanced Visibility */
 .glass {
-  @apply bg-white/5 backdrop-blur-md border border-white/10;
+  @apply bg-gray-50/80 backdrop-blur-md border border-gray-200 shadow-md;
 }
 
 .glass-dark {
-  @apply bg-black/20 backdrop-blur-xl border border-brand-purple/20;
+  @apply bg-white border-2 border-gray-200 shadow-xl;
 }
 
 .glass-hover {
-  @apply glass-dark hover:border-brand-purple/40 transition-colors;
+  @apply glass-dark hover:border-brand-purple/40 hover:shadow-2xl transition-all;
 }
 
 /* Music visualizer animation */
@@ -146,7 +148,7 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(10, 14, 39, 0.5);
+  background: rgba(243, 244, 246, 0.8);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -158,29 +160,29 @@ textarea {
   background: linear-gradient(135deg, #06b6d4, #ff6b35);
 }
 
-/* Custom scrollbar styling to match dark theme */
+/* Custom scrollbar styling for light theme */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(243, 244, 246, 0.8);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.5);
+  background: rgba(156, 163, 175, 0.6);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.8);
+  background: rgba(107, 114, 128, 0.8);
 }
 
 /* Firefox scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.5) rgba(15, 23, 42, 0.3);
+  scrollbar-color: rgba(156, 163, 175, 0.6) rgba(243, 244, 246, 0.8);
 }
 
 /* Custom brand colors - add these to your tailwind.config.js */
@@ -230,4 +232,190 @@ textarea {
 .shadow-brand-cyan\/50 {
   --tw-shadow-color: rgba(6, 182, 212, 0.5);
   box-shadow: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+}
+
+/* Hero Slider Styles */
+.hero-slider-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 2px solid rgba(229, 231, 235, 1);
+}
+
+@media (min-width: 768px) {
+  .hero-slider-container {
+    height: 600px;
+  }
+}
+
+.hero-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  z-index: 0;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.hero-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  z-index: 1;
+}
+
+.hero-slide-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3rem 2rem;
+  z-index: 2;
+  text-align: center;
+}
+
+.hero-slide-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #a855f7, #06b6d4, #ff6b35);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: slideInUp 0.8s ease-out;
+}
+
+@media (min-width: 768px) {
+  .hero-slide-title {
+    font-size: 4rem;
+  }
+}
+
+.hero-slide-subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+  animation: slideInUp 0.8s ease-out 0.2s both;
+}
+
+@media (min-width: 768px) {
+  .hero-slide-subtitle {
+    font-size: 1.5rem;
+  }
+}
+
+/* Slider Navigation Dots */
+.hero-slider-dots {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
+  z-index: 10;
+}
+
+.hero-slider-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.hero-slider-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.hero-slider-dot.active {
+  background: linear-gradient(135deg, #a855f7, #06b6d4);
+  border-color: white;
+  transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+}
+
+/* Slider Navigation Arrows */
+.hero-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f2937;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hero-slider-arrow:hover {
+  background: white;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.hero-slider-arrow-left {
+  left: 1rem;
+}
+
+.hero-slider-arrow-right {
+  right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero-slider-arrow-left {
+    left: 2rem;
+  }
+
+  .hero-slider-arrow-right {
+    right: 2rem;
+  }
+}
+
+/* Slide In Up Animation */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

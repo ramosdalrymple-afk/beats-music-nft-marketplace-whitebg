@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { Music, TrendingUp, Users, Lock, Zap, Gift } from 'lucide-react';
+import HeroSlider from '../components/HeroSlider';
 
 export default function Home() {
   const stats = [
@@ -53,12 +54,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen text-white" style={{
-        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/home-bg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}>
+      <main className="min-h-screen bg-white text-gray-900">
         {/* Hero Section */}
         <section className="relative px-4 py-20 overflow-hidden sm:px-6 lg:px-8">
           {/* Background gradient orbs */}
@@ -71,13 +67,13 @@ export default function Home() {
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-brand-purple via-brand-cyan to-brand-purple bg-clip-text text-transparent">
               About Us
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Beats is an interactive NFT Art Fair with a 
-              unique collection of 4,444. The project is a 
-              combination of NFT with staking of NFT’s 
-              and Play to Earn mechanics. The Beats 
-              exhibits Soul Collection of famous and 
-              legendary artists around the world. 
+            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
+              Beats is an interactive NFT Art Fair with a
+              unique collection of 4,444. The project is a
+              combination of NFT with staking of NFT's
+              and Play to Earn mechanics. The Beats
+              exhibits Soul Collection of famous and
+              legendary artists around the world.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -100,9 +96,9 @@ export default function Home() {
               {stats.map((stat, idx) => (
                 <div
                   key={idx}
-                  className="glass p-6 rounded-xl border border-brand-cyan/30 hover:border-brand-cyan/60 transition-all"
+                  className="bg-white p-6 rounded-xl border border-gray-200 hover:border-brand-cyan/60 hover:shadow-lg transition-all"
                 >
-                  <p className="text-gray-400 text-sm mb-2">{stat.label}</p>
+                  <p className="text-gray-600 text-sm mb-2">{stat.label}</p>
                   <p className="text-3xl font-bold text-brand-cyan mb-2">{stat.value}</p>
                   <p className="text-brand-orange text-sm font-semibold">{stat.change} this month</p>
                 </div>
@@ -111,30 +107,34 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Hero Slider Section */}
+        <section className="px-4 py-20 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+          <HeroSlider />
+        </section>
+
         {/* Features Section */}
         <section className="px-4 py-20 sm:px-6 lg:px-8 max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16">
             Why <span className="text-brand-purple">Beats</span>?
           </h2>
 
-          {/* <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto"> */}
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-7xl mx-auto">
-              NFTs has brought an exciting era to the crypto world. 
-              2021 is the year when NFTs became the mainstream. 
-              It has federated the world of art and crypto. 
-              But to make it even more exciting, we are not just 
-              sticking to the traditional NFT art fairs.  We all know 
-              that music has the power to connect people. Our NFT 
-              is a unique way for people to create connections not 
-              only between fans and musicians, but also to attract 
-              community that are willing to support artists, 
-              musicians and gamers. It is an innovative experience 
-              where artists can showcase their unique creations 
-              and fans to enjoy and get the assets that are worth 
-              the value. Both users are able to access the more 
-              exciting ways to maximize their digital earnings like 
-              Beats, play-to-earn games and earning from 
-              listening to music. 
+          <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-7xl mx-auto">
+              NFTs has brought an exciting era to the crypto world.
+              2021 is the year when NFTs became the mainstream.
+              It has federated the world of art and crypto.
+              But to make it even more exciting, we are not just
+              sticking to the traditional NFT art fairs.  We all know
+              that music has the power to connect people. Our NFT
+              is a unique way for people to create connections not
+              only between fans and musicians, but also to attract
+              community that are willing to support artists,
+              musicians and gamers. It is an innovative experience
+              where artists can showcase their unique creations
+              and fans to enjoy and get the assets that are worth
+              the value. Both users are able to access the more
+              exciting ways to maximize their digital earnings like
+              Beats, play-to-earn games and earning from
+              listening to music.
             </p>
 
           {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -157,26 +157,26 @@ export default function Home() {
         </section>
 
         {/* Collection Highlight */}
-        <section className="px-4 py-20 sm:px-6 lg:px-8 bg-dark-card/50 border-y border-brand-cyan/20">
+        <section className="px-4 py-20 sm:px-6 lg:px-8 bg-gray-50 border-y border-gray-200">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <p className="text-brand-cyan font-semibold mb-2">SOUL COLLECTION</p>
-                <h2 className="text-4xl font-bold mb-6">
+                <h2 className="text-4xl font-bold mb-6 text-gray-900">
                   Beats <span className="text-brand-orange">NFTs</span>
                 </h2>
-                <p className="text-gray-300 mb-6 text-lg">
-                  Beats NFTs – Soul Collection – are inspired 
-                  by different kinds of music genre, featuring 
-                  the legendary musicians around the world 
-                  to pay tributes to their contribution to the 
-                  music industry. With the Beats NFTs comes 
-                  with $SOUL Token. The team has been 
-                  working endlessly and looking forward to 
-                  the development of the Musicverse. 
+                <p className="text-gray-700 mb-6 text-lg">
+                  Beats NFTs – Soul Collection – are inspired
+                  by different kinds of music genre, featuring
+                  the legendary musicians around the world
+                  to pay tributes to their contribution to the
+                  music industry. With the Beats NFTs comes
+                  with $SOUL Token. The team has been
+                  working endlessly and looking forward to
+                  the development of the Musicverse.
                 </p>
 
-                <h3 className="text-2xl font-bold mb-6">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900">
                   Be ready. <span className="text-brand-orange">This is wild!!!</span>
                 </h3>
 
@@ -212,16 +212,16 @@ export default function Home() {
                 ].map((char, idx) => (
                   <div
                     key={idx}
-                    className="aspect-square glass-dark rounded-lg border border-brand-cyan/30 hover:border-brand-cyan/60 transition-all overflow-hidden group cursor-pointer hover:shadow-neon-cyan hover:-translate-y-2"
+                    className="aspect-square bg-white rounded-lg border-2 border-gray-200 hover:border-brand-cyan/60 hover:shadow-xl transition-all overflow-hidden group cursor-pointer hover:-translate-y-2 relative"
                     style={{
                       backgroundImage: `url(${char.image})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
                   >
-                    {/* Dark overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-base via-transparent to-transparent opacity-60" />
-                    
+                    {/* Light overlay for better text contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+
                     {/* Content */}
                     <div className="h-full flex flex-col items-center justify-end p-4 relative z-10">
                       <p className="text-sm font-semibold text-center text-white">{char.name}</p>
@@ -235,15 +235,15 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="px-4 py-20 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto bg-gradient-to-r from-brand-purple/20 to-brand-cyan/20 border border-brand-purple/40 rounded-2xl p-12 text-center">
-            <h2 className="text-4xl font-bold mb-4">Ready to Start Earning?</h2>
-            <p className="text-gray-300 mb-8 text-lg">
-              Join thousands of listeners earning $SOUL Token  while enjoying exclusive music from Soul Collection.
+          <div className="max-w-4xl mx-auto bg-white border-2 border-gray-200 shadow-xl rounded-2xl p-12 text-center">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">Ready to Start Earning?</h2>
+            <p className="text-gray-700 mb-8 text-lg">
+              Join thousands of listeners earning $SOUL Token while enjoying exclusive music from Soul Collection.
             </p>
 
             <Link
               href="/beats-tap"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-brand-cyan to-brand-orange text-white font-bold rounded-xl hover:shadow-neon-cyan transition-all transform hover:scale-105"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-brand-cyan to-brand-orange text-white font-bold rounded-xl hover:shadow-lg hover:shadow-brand-cyan/50 transition-all transform hover:scale-105"
             >
               Enter Beats Tap Now
             </Link>

@@ -229,41 +229,41 @@ export default function Trade() {
         <title>NFT Trading Terminal - Beats</title>
       </Head>
 
-      <div className="min-h-screen text-slate-200 bg-[#0B0E14] font-sans pb-20 relative overflow-x-hidden">
-        
+      <div className="min-h-screen text-gray-900 bg-white font-sans pb-20 relative overflow-x-hidden">
+
         {/* TOP BAR */}
-        <div className="border-b border-white/5 bg-[#11141D] px-6 py-4 sticky top-0 z-30 shadow-md">
+        <div className="border-b border-gray-200 bg-white px-6 py-4 sticky top-0 z-30 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Logo Area: Styled like a Record Sleeve */}
-                <div className="w-12 h-12 rounded bg-gradient-to-br from-[#1A1D26] to-black border border-white/10 flex items-center justify-center shadow-lg relative overflow-hidden group">
+                <div className="w-12 h-12 rounded bg-gradient-to-br from-purple-50 to-cyan-50 border-2 border-gray-200 flex items-center justify-center shadow-md relative overflow-hidden group">
                   <div className="absolute inset-0 bg-brand-purple/10 group-hover:bg-brand-purple/20 transition-colors" />
                   <Disc className="w-6 h-6 text-brand-purple animate-spin-slow" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white tracking-tight">Beats Terminal</h1>
-                  <p className="text-sm text-slate-400">P2P Music Swap</p>
+                  <h1 className="text-xl font-bold text-gray-900 tracking-tight">Beats Terminal</h1>
+                  <p className="text-sm text-gray-600">P2P Music Swap</p>
                 </div>
               </div>
 
               {account ? (
-                <button 
+                <button
                   onClick={() => copyToClipboard(account.address, 'Wallet address copied!')}
-                  className="group flex items-center gap-3 bg-[#0B0E14] px-4 py-2 rounded-lg border border-white/5 hover:border-brand-purple/50 transition-all cursor-pointer"
+                  className="group flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-brand-purple/50 transition-all cursor-pointer"
                 >
                   <div className="flex gap-1 items-end h-3">
                     <div className="w-1 h-1.5 bg-green-500 rounded-sm animate-[bounce_1s_infinite]" />
                     <div className="w-1 h-3 bg-green-500 rounded-sm animate-[bounce_1.2s_infinite]" />
                     <div className="w-1 h-2 bg-green-500 rounded-sm animate-[bounce_0.8s_infinite]" />
                   </div>
-                  <span className="text-sm font-mono text-slate-300 group-hover:text-white transition-colors">
+                  <span className="text-sm font-mono text-gray-700 group-hover:text-gray-900 transition-colors">
                     {account.address.slice(0, 6)}...{account.address.slice(-4)}
                   </span>
-                  <Copy className="w-3.5 h-3.5 text-slate-500 group-hover:text-brand-purple transition-colors" />
+                  <Copy className="w-3.5 h-3.5 text-gray-500 group-hover:text-brand-purple transition-colors" />
                 </button>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <div className="w-2 h-2 bg-red-400 rounded-full" />
                   Not Connected
                 </div>
@@ -273,20 +273,20 @@ export default function Trade() {
         </div>
 
         {/* NAVIGATION TABS */}
-        <div className="border-b border-white/5 bg-[#11141D] sticky top-[80px] z-20">
+        <div className="border-b border-gray-200 bg-white sticky top-[80px] z-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-1 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setView('browse')}
                 className={`px-6 py-4 text-sm font-medium transition-all relative whitespace-nowrap ${
                   view === 'browse'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 Browse & Create
                 {view === 'browse' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.3)]" />
                 )}
               </button>
 
@@ -294,8 +294,8 @@ export default function Trade() {
                 onClick={() => setView('pending')}
                 className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'pending'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <Clock className="w-4 h-4" />
@@ -310,15 +310,15 @@ export default function Trade() {
                 onClick={() => setView('received')}
                 className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'received'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 Received Offers
                 <TabBadge count={counts.received} />
                 {view === 'received' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.3)]" />
                 )}
               </button>
 
@@ -326,14 +326,14 @@ export default function Trade() {
                 onClick={() => setView('history')}
                 className={`px-6 py-4 text-sm font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
                   view === 'history'
-                    ? 'text-white'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                    ? 'text-gray-900'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <History className="w-4 h-4" />
                 Trade History
                 {view === 'history' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.5)]" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple shadow-[0_-2px_8px_rgba(168,85,247,0.3)]" />
                 )}
               </button>
             </div>
@@ -346,15 +346,15 @@ export default function Trade() {
             <div className="flex flex-col items-center justify-center py-32 animate-in fade-in zoom-in duration-500">
               <div className="relative">
                 <div className="absolute -inset-4 bg-brand-purple/20 rounded-full blur-xl" />
-                <div className="w-24 h-24 relative rounded-full bg-[#1A1D26] border border-white/10 flex items-center justify-center mb-8 shadow-2xl">
-                  <Wallet className="w-10 h-10 text-slate-400" />
+                <div className="w-24 h-24 relative rounded-full bg-gray-50 border-2 border-gray-200 flex items-center justify-center mb-8 shadow-xl">
+                  <Wallet className="w-10 h-10 text-brand-purple" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold text-white mb-3">Connect Your Wallet</h2>
-              <p className="text-slate-400 mb-8 text-center max-w-md">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Connect Your Wallet</h2>
+              <p className="text-gray-600 mb-8 text-center max-w-md">
                 Connect your Sui wallet to view your NFTs, create swaps, and manage your trade offers securely.
               </p>
-              <div className="px-6 py-3 bg-white/5 rounded-lg border border-dashed border-white/10 text-slate-500 text-sm">
+              <div className="px-6 py-3 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-gray-600 text-sm">
                 Use the wallet button in the navigation bar to connect
               </div>
             </div>
@@ -427,7 +427,7 @@ export default function Trade() {
                              <div className="flex flex-col items-center mt-1">
                                <span className="text-[10px] font-bold text-slate-300 font-mono group-hover:text-brand-purple transition-colors">
                                  {trader.address.slice(0, 4)}...{trader.address.slice(-2)}
-                               </span>
+                                </span>
                              </div>
                            </button>
                          ))}
@@ -486,7 +486,6 @@ export default function Trade() {
                 <TradeHistoryView
                   account={account}
                   client={client}
-                  TRADING_CONFIG={TRADING_CONFIG}
                 />
               )}
             </div>

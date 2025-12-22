@@ -27,15 +27,15 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, isSelected, onSelect, selectionC
       onClick={onSelect}
       className={`
         relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
-        bg-[#11141D] border hover:border-white/20
-        ${isSelected 
-          ? `border-2 ${borderColorClass} shadow-lg ring-2 ${ringColorClass}` 
-          : 'border-white/5 hover:bg-white/5'
+        bg-white border hover:border-gray-300
+        ${isSelected
+          ? `border-2 ${borderColorClass} shadow-lg ring-2 ${ringColorClass}`
+          : 'border-gray-200 hover:bg-gray-50'
         }
       `}
     >
       {/* NFT Image */}
-      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800">
+      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
         <img
           src={nft.imageUrl}
           alt={nft.name}
@@ -48,13 +48,13 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, isSelected, onSelect, selectionC
 
       {/* NFT Info */}
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-white truncate mb-1">
+        <h4 className="text-sm font-semibold text-gray-900 truncate mb-1">
           {nft.name}
         </h4>
-        <p className="text-xs text-slate-400 truncate mb-1">
+        <p className="text-xs text-gray-600 truncate mb-1">
           {nft.description}
         </p>
-        <p className="text-xs text-slate-600 font-mono truncate">
+        <p className="text-xs text-gray-400 font-mono truncate">
           {nft.id.slice(0, 8)}...{nft.id.slice(-6)}
         </p>
       </div>

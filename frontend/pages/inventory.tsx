@@ -59,10 +59,12 @@ const fetchUserNFTs = async () => {
 
   try {
     let allObjects: any[] = [];
-    let cursor: string | null = null;
+    
+    // FIX 1: Allow undefined in the type definition for cursor
+    let cursor: string | null | undefined = null;
     let hasNextPage = true;
 
-    // 🔁 PAGINATION LOOP (THIS IS THE FIX)
+    // 🔁 PAGINATION LOOP
     while (hasNextPage) {
       const response = await client.getOwnedObjects({
         owner: account.address,
@@ -150,7 +152,8 @@ const fetchUserNFTs = async () => {
 
       signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          // FIX 2: Cast tx to any to bypass version mismatch
+          transactionBlock: tx as any,
           options: {
             showEffects: true,
             showObjectChanges: true,
@@ -195,17 +198,11 @@ const fetchUserNFTs = async () => {
         <meta name="description" content="View your music NFT collection" />
       </Head>
 
-      <div className="min-h-screen text-white space-y-8" style={{
-        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/inventory.JPG)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        padding: '2rem'
-      }}>
+      <div className="min-h-screen bg-white text-gray-900 space-y-8 p-8">
         {/* Header Section */}
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Inventory</h1>
-          <p className="text-lg text-slate-300">Your collected beats and NFTs</p>
+          <p className="text-lg text-gray-700">Your collected beats and NFTs</p>
         </div>
 
         {/* Status Messages - Fixed to Lower Left with Minimize */}
@@ -313,21 +310,21 @@ const fetchUserNFTs = async () => {
         )}
 
         {/* Main Content */}
-        <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
+        <div className="bg-white rounded-lg p-6 border-2 border-gray-200 shadow-xl">
           {!account ? (
             <div className="text-center py-16">
               <Wallet className="w-16 h-16 text-brand-purple mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
-              <p className="text-slate-400">Please connect your wallet to view your NFT collection</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Wallet</h3>
+              <p className="text-gray-600">Please connect your wallet to view your NFT collection</p>
             </div>
           ) : (
             <>
               {/* Collection Info Bar */}
               <div className="mb-6">
-                <div className="glass-dark rounded-lg p-4 border border-brand-purple/30">
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-slate-300 text-sm mb-2">
+                      <p className="text-gray-700 text-sm mb-2">
                         View all Music NFTs in your wallet. You can list them on the marketplace or keep them in your collection.
                       </p>
                       <p className="text-brand-purple text-xs">
@@ -337,7 +334,7 @@ const fetchUserNFTs = async () => {
                     <button
                       onClick={fetchUserNFTs}
                       disabled={loading}
-                      className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg font-semibold transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
+                      className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 text-brand-purple rounded-lg font-semibold transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
                     >
                       <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                       {loading ? 'Refreshing...' : 'Refresh'}
@@ -349,13 +346,13 @@ const fetchUserNFTs = async () => {
               {/* Search Bar */}
               <div className="mb-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search your NFTs by name, ID, or description..."
-                    className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-brand-purple/50"
                   />
                 </div>
               </div>

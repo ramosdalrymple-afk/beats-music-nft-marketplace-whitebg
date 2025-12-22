@@ -45,9 +45,10 @@ export default function BeatsTap() {
         arguments: [tx.object(MARKETPLACE_ID)],
       });
 
+      // FIX 1: Cast tx to any to bypass version mismatch
       const result = await client.devInspectTransactionBlock({
         sender: account?.address || '0x0000000000000000000000000000000000000000000000000000000000000000',
-        transactionBlock: tx,
+        transactionBlock: tx as any,
       });
 
       if (result.results?.[0]?.returnValues) {
@@ -65,7 +66,8 @@ export default function BeatsTap() {
         options: { showContent: true }
       });
 
-      if (marketplaceObject?.data?.content?.fields) {
+      // FIX 2: Check dataType before accessing fields
+      if (marketplaceObject?.data?.content?.dataType === 'moveObject') {
         const musicLibrary = (marketplaceObject.data.content.fields as any).music_library;
         
         if (musicLibrary?.fields?.id?.id) {
@@ -93,7 +95,8 @@ export default function BeatsTap() {
                 options: { showContent: true }
               });
 
-              if (fieldObject?.data?.content?.fields) {
+              // FIX 3: Check dataType here as well
+              if (fieldObject?.data?.content?.dataType === 'moveObject') {
                 const fields = fieldObject.data.content.fields as any;
                 if (fields.value?.fields) {
                   const listing = fields.value.fields;
@@ -112,14 +115,17 @@ export default function BeatsTap() {
                   };
                 }
               }
+              return null;
             } catch (err) {
               console.error('Error fetching music NFT:', err);
               return null;
             }
           });
 
+          // FIX 4: Stronger null check for filter
           const musicList = (await Promise.all(musicPromises))
-            .filter(m => m !== null && !BLOCKED_NFTS.has(m.id));
+            .filter((m) => !!m && !BLOCKED_NFTS.has(m.id));
+            
           setListedMusic(musicList);
         }
       }
@@ -137,9 +143,10 @@ export default function BeatsTap() {
         arguments: [tx.object(MARKETPLACE_ID), tx.pure.address(account.address)],
       });
 
+      // FIX 5: Cast tx
       const result = await client.devInspectTransactionBlock({
         sender: account.address,
-        transactionBlock: tx,
+        transactionBlock: tx as any,
       });
 
       if (result.results?.[0]?.returnValues?.[0]) {
@@ -152,9 +159,10 @@ export default function BeatsTap() {
             arguments: [tx2.object(MARKETPLACE_ID), tx2.pure.address(account.address)],
           });
 
+          // FIX 6: Cast tx2
           const sessionResult = await client.devInspectTransactionBlock({
             sender: account.address,
-            transactionBlock: tx2,
+            transactionBlock: tx2 as any,
           });
 
           if (sessionResult.results?.[0]?.returnValues) {
@@ -281,7 +289,8 @@ export default function BeatsTap() {
       });
 
       signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
+        // FIX 7: Cast tx
+        { transactionBlock: tx as any },
         {
           onSuccess: () => {
             setSuccess('Started listening! Rewards are accumulating...');
@@ -335,7 +344,8 @@ export default function BeatsTap() {
       });
 
       signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
+        // FIX 8: Cast tx
+        { transactionBlock: tx as any },
         {
           onSuccess: () => {
             setSuccess('Listening time updated!');
@@ -374,7 +384,8 @@ export default function BeatsTap() {
       });
 
       signAndExecuteTransactionBlock(
-        { transactionBlock: tx },
+        // FIX 9: Cast tx
+        { transactionBlock: tx as any },
         {
           onSuccess: () => {
             setSuccess(`Claimed ${pendingRewards.toFixed(8)} SUI!`);
@@ -432,13 +443,13 @@ export default function BeatsTap() {
         <meta name="description" content="Earn SUI by listening to amazing music" />
       </Head>
 
-      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-purple-500/30 relative overflow-hidden font-sans pb-32">
+      <div className="min-h-screen bg-white text-gray-900 selection:bg-purple-500/30 relative overflow-hidden font-sans pb-32">
         <audio ref={audioRef} crossOrigin="anonymous" />
-        
+
         {/* Ambient Background */}
         <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-600/10 blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-100 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-100 blur-[120px]" />
         </div>
 
         {/* Notifications */}
@@ -447,14 +458,14 @@ export default function BeatsTap() {
             <div className="bg-red-500/10 backdrop-blur-xl border border-red-500/20 text-red-200 p-4 rounded-xl shadow-2xl flex items-start gap-3 animate-in slide-in-from-right">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 text-sm">{error}</div>
-              <button onClick={() => setError('')} className="text-red-400 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setError('')} className="text-red-500 hover:text-red-700 transition-colors">✕</button>
             </div>
           )}
           {success && (
             <div className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/20 text-emerald-200 p-4 rounded-xl shadow-2xl flex items-start gap-3 animate-in slide-in-from-right">
               <Zap className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 text-sm">{success}</div>
-              <button onClick={() => setSuccess('')} className="text-emerald-400 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setSuccess('')} className="text-emerald-500 hover:text-emerald-700 transition-colors">✕</button>
             </div>
           )}
         </div>
@@ -462,24 +473,24 @@ export default function BeatsTap() {
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
           
           {/* Header */}
-          <div className="flex flex-col md:flex-row items-end justify-between gap-6 pb-6 border-b border-white/5">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-6 pb-6 border-b border-gray-200">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-slate-400 mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-200 text-xs font-medium text-green-700 mb-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 Sui Network Live
               </div>
-              <h1 className="text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-orange-400">
+              <h1 className="text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-cyan-600 to-orange-600">
                 Beats Tap
               </h1>
-              <p className="text-lg text-slate-400 max-w-xl">
+              <p className="text-lg text-gray-700 max-w-xl">
                 The first Listen-to-Earn protocol on Sui. Stream high-quality tracks and earn automatic rewards every second.
               </p>
             </div>
-            
-            <button 
+
+            <button
               onClick={fetchListedMusic}
               disabled={loading}
-              className="group flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              className="group flex items-center gap-2 px-5 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
               <span className="font-medium">Refresh Library</span>
@@ -488,49 +499,49 @@ export default function BeatsTap() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative group overflow-hidden rounded-2xl p-5 bg-slate-900/50 border border-white/10 backdrop-blur-md">
+            <div className="relative group overflow-hidden rounded-2xl p-5 bg-white border-2 border-gray-200 shadow-lg">
               <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                 <Award className="w-20 h-20 rotate-12" />
               </div>
-              <h3 className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-4 flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-wider text-gray-600 font-semibold mb-4 flex items-center gap-2">
                 <TrendingUp className="w-3.5 h-3.5 text-purple-400" /> Marketplace
               </h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <div className="text-xl md:text-2xl font-bold text-white leading-tight">{marketplaceStats.totalMusic - 1}</div>
-                  <div className="text-[10px] text-slate-500 font-medium uppercase mt-1">Tracks</div>
+                  <div className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">{marketplaceStats.totalMusic - 1}</div>
+                  <div className="text-[10px] text-gray-500 font-medium uppercase mt-1">Tracks</div>
                 </div>
                 <div>
-                  <div className="text-xl md:text-2xl font-bold text-white leading-tight">{marketplaceStats.totalListens}</div>
-                  <div className="text-[10px] text-slate-500 font-medium uppercase mt-1">Plays</div>
+                  <div className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">{marketplaceStats.totalListens}</div>
+                  <div className="text-[10px] text-gray-500 font-medium uppercase mt-1">Plays</div>
                 </div>
                 <div>
-                  <div className="text-xl md:text-2xl font-bold text-emerald-400 leading-tight">{marketplaceStats.totalRewards.toFixed(2)}</div>
-                  <div className="text-[10px] text-slate-500 font-medium uppercase mt-1">Dist. (SUI)</div>
+                  <div className="text-xl md:text-2xl font-bold text-emerald-600 leading-tight">{marketplaceStats.totalRewards.toFixed(2)}</div>
+                  <div className="text-[10px] text-gray-500 font-medium uppercase mt-1">Dist. (SUI)</div>
                 </div>
               </div>
             </div>
 
-            <div className="relative group overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-orange-500/10 to-purple-600/5 border border-white/10 backdrop-blur-md">
-              <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+            <div className="relative group overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-orange-50 to-purple-50 border-2 border-gray-200 shadow-lg">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
                 <Zap className="w-20 h-20 rotate-12 text-orange-500" />
               </div>
-              <h3 className="text-xs uppercase tracking-wider text-orange-400/80 font-semibold mb-3 flex items-center gap-2">
+              <h3 className="text-xs uppercase tracking-wider text-orange-600 font-semibold mb-3 flex items-center gap-2">
                 <Coins className="w-3.5 h-3.5" /> Reward Pool
               </h3>
               <div className="flex flex-col gap-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 leading-none">
+                  <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 leading-none">
                     {marketplaceStats.poolBalance.toFixed(4)}
                   </span>
-                  <span className="text-sm font-bold text-slate-500">SUI</span>
+                  <span className="text-sm font-bold text-gray-600">SUI</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mt-1">
+                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden mt-1">
                   <div className="h-full bg-gradient-to-r from-orange-500 to-red-500 w-[45%]" />
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                <div className="flex justify-between text-[10px] text-gray-600 mt-1">
                   <span>Rate: 100 MIST/s</span>
-                  <span className="flex items-center gap-1 text-emerald-400"><div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"/> Active</span>
+                  <span className="flex items-center gap-1 text-emerald-600"><div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"/> Active</span>
                 </div>
               </div>
             </div>
@@ -544,23 +555,23 @@ export default function BeatsTap() {
             </h2>
 
             {!account ? (
-              <div className="flex flex-col items-center justify-center py-20 rounded-3xl border border-dashed border-slate-800 bg-slate-900/30">
-                <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-                  <Volume2 className="w-8 h-8 text-slate-600" />
+              <div className="flex flex-col items-center justify-center py-20 rounded-3xl border-2 border-dashed border-gray-300 bg-gray-50">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <Volume2 className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-slate-300">Connect Wallet</h3>
-                <p className="text-slate-500 text-sm mt-1">Connect your Sui wallet to start earning</p>
-              </div>
+                <h3 className="text-lg font-medium text-gray-600">Connect Wallet</h3>
+                <p className="text-gray-600 text-sm mt-1">Connect your Sui wallet to start earning</p>
+              </div> 
             ) : listedMusic.length === 0 ? (
-              <div className="text-center py-20 rounded-3xl bg-slate-900/30 border border-white/5">
-                <Music className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                <p className="text-slate-400">No music listed yet</p>
-              </div>
+              <div className="text-center py-20 rounded-3xl bg-gray-50 border border-gray-200">
+                <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No music listed yet</p>
+              </div> 
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {listedMusic.map((track) => (
-                  <div key={track.id} className="group relative bg-slate-900/40 border border-white/5 rounded-2xl p-4 hover:bg-white/5 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1">
-                    <div className="relative aspect-square rounded-xl overflow-hidden mb-4 shadow-lg bg-slate-800">
+                  <div key={track.id} className="group relative bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-transform duration-300 hover:-translate-y-1 hover:border-purple-500">
+                    <div className="relative aspect-square rounded-xl overflow-hidden mb-4 shadow-sm bg-gray-100">
                       <img 
                         src={track.image} 
                         alt={track.title} 
@@ -587,11 +598,11 @@ export default function BeatsTap() {
                     </div>
 
                     <div className="space-y-1">
-                      <h4 className="font-bold text-white truncate pr-2">{track.title}</h4>
-                      <p className="text-sm text-slate-400 truncate">{track.artist}</p>
+                      <h4 className="font-bold text-gray-900 truncate pr-2">{track.title}</h4>
+                      <p className="text-sm text-gray-500 truncate">{track.artist}</p>
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between text-xs text-slate-500 border-t border-white/5 pt-3">
+                    <div className="mt-4 flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
                       <div className="flex items-center gap-1.5">
                          <Play className="w-3 h-3" /> 
                          {track.totalListens}
@@ -607,7 +618,7 @@ export default function BeatsTap() {
             )}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 pt-8 border-t border-white/5">
+          <div className="grid md:grid-cols-3 gap-6 pt-8 border-t border-gray-100">
               {[
                   { step: '01', title: 'Select', desc: 'Choose a track from the curated library.' },
                   { step: '02', title: 'Listen', desc: 'Stream audio. Earn 100 MIST per second.' },
@@ -616,8 +627,8 @@ export default function BeatsTap() {
                   <div key={item.step} className="flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors">
                       <span className="text-3xl font-black text-slate-800">{item.step}</span>
                       <div>
-                          <h4 className="font-bold text-white">{item.title}</h4>
-                          <p className="text-sm text-slate-400">{item.desc}</p>
+                          <h4 className="font-bold text-gray-900">{item.title}</h4>
+                          <p className="text-sm text-gray-600">{item.desc}</p> 
                       </div>
                   </div>
               ))}
@@ -628,7 +639,7 @@ export default function BeatsTap() {
         {/* --- COMPACT PLAYER OVERLAY --- */}
         {currentSession && playingTrack && (
           <div className="fixed bottom-0 left-0 w-full z-50 p-4 flex justify-center animate-in slide-in-from-bottom duration-500">
-             <div className="w-full max-w-5xl bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row items-center p-3 gap-4">
+             <div className="w-full max-w-5xl bg-white/90 backdrop-blur-xl border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] rounded-2xl overflow-hidden flex flex-col md:flex-row items-center p-3 gap-4">
                
                 {/* 1. Track Info */}
                 <div className="flex items-center gap-3 w-full md:w-auto flex-1 min-w-0">
@@ -643,15 +654,15 @@ export default function BeatsTap() {
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-bold text-white truncate">{playingTrack.title}</h3>
-                        <p className="text-xs text-slate-400 truncate">{playingTrack.artist}</p>
+                        <h3 className="text-sm font-bold text-gray-900 truncate">{playingTrack.title}</h3>
+                        <p className="text-xs text-gray-500 truncate">{playingTrack.artist}</p>
                     </div>
                 </div>
 
                 {/* 2. Controls & Stats */}
                 <div className="flex flex-col items-center justify-center gap-2 w-full md:w-auto">
                     <div className="flex items-center gap-4">
-                        <button onClick={toggleLoop} className={`p-1.5 rounded-full transition-colors ${isLooping ? 'text-purple-400 bg-purple-500/10' : 'text-slate-500 hover:text-white'}`}>
+                        <button onClick={toggleLoop} className={`p-1.5 rounded-full transition-colors ${isLooping ? 'text-purple-600 bg-purple-100' : 'text-gray-600 hover:text-gray-900'}`}>
                             <Repeat className="w-4 h-4" />
                         </button>
                         <button 
@@ -663,18 +674,18 @@ export default function BeatsTap() {
                         <button 
                             onClick={updateListening}
                             disabled={loading || !isPlaying}
-                            className="p-1.5 rounded-full text-slate-500 hover:text-white transition-colors disabled:opacity-30"
+                            className="p-1.5 rounded-full text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-30"
                             title="Sync Time"
                         >
                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400 bg-black/20 px-3 py-1 rounded-full">
+                    <div className="flex items-center gap-3 text-[10px] font-mono text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                         <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" /> {formatTime(listeningTime)}
                         </span>
-                        <span className="w-px h-3 bg-white/10"></span>
-                        <span className="flex items-center gap-1 text-emerald-400">
+                        <span className="w-px h-3 bg-gray-200"></span>
+                        <span className="flex items-center gap-1 text-emerald-600">
                             <Zap className="w-3 h-3" /> +{pendingRewards.toFixed(6)} SUI
                         </span>
                     </div>
@@ -685,7 +696,7 @@ export default function BeatsTap() {
                     
                     {/* VOLUME CONTROL (Aligned) */}
                     <div className="hidden sm:flex items-center gap-2 px-2">
-                        <button onClick={toggleMute} className="text-slate-400 hover:text-white transition-colors">
+                        <button onClick={toggleMute} className="text-gray-600 hover:text-gray-900 transition-colors">
                             {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                         </button>
                         <input
@@ -716,4 +727,4 @@ export default function BeatsTap() {
       </div>
     </>
   );
-} 
+}

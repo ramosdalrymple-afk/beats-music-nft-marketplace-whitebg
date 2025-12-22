@@ -1,0 +1,101 @@
+# ============================================
+# Dependencies
+# ============================================
+**/node_modules
+**/npm-debug.log
+**/yarn-error.log
+**/yarn-debug.log
+**/pnpm-debug.log
+**/.pnpm-store
+
+# ============================================
+# Next.js Build Output
+# ============================================
+**/.next
+**/out
+**/.vercel
+
+# ============================================
+# Environment Files (Local Development)
+# ============================================
+**/.env
+**/.env.local
+**/.env.development
+**/.env.development.local
+**/.env.test
+**/.env.test.local
+**/.env.production.local
+.env*
+
+# ============================================
+# Git & Version Control
+# ============================================
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.github
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+**/.vscode
+**/.idea
+**/.DS_Store
+**/*.swp
+**/*.swo
+**/*~
+
+# ============================================
+# Testing & Coverage
+# ============================================
+**/coverage
+**/.nyc_output
+**/jest.config.js
+**/*.test.js
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.js
+**/*.spec.ts
+**/*.spec.tsx
+
+# ============================================
+# Documentation & Markdown
+# ============================================
+**/README.md
+**/CHANGELOG.md
+**/LICENSE
+**/docs
+
+# ============================================
+# Docker Files (Prevent Recursion)
+# ============================================
+**/Dockerfile
+**/docker-compose.yml
+**/.dockerignore
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+**/logs
+**/*.log
+**/tmp
+**/temp
+**/.cache
+
+# ============================================
+# Build & Distribution
+# ============================================
+**/dist
+**/build
+
+# ============================================
+# Backend (If Not Needed in Container)
+# ============================================
+backend/
+
+# ============================================
+# Miscellaneous
+# ============================================
+**/.eslintcache
+**/.prettierignore
+**/.editorconfig

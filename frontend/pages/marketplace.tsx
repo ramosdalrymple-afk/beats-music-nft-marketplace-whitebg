@@ -65,8 +65,13 @@ export default function Marketplace() {
 
       setDebugInfo('Marketplace loaded. Searching for listed items...');
 
-      // Check if the marketplace has the items field
-      const itemsField = marketplaceObj.data.content.fields?.items;
+      // FIX 1: Check dataType before accessing fields
+      let itemsField;
+      if (marketplaceObj.data.content.dataType === 'moveObject') {
+        const fields = marketplaceObj.data.content.fields as any;
+        itemsField = fields.items;
+      }
+
       if (!itemsField?.fields?.id?.id) {
         throw new Error('Marketplace items field not found');
       }
@@ -99,7 +104,13 @@ export default function Marketplace() {
 
           console.log('Listing field:', listingField);
 
-          const listingData = listingField.data?.content?.fields?.value?.fields;
+          // FIX 2: Check dataType before accessing fields
+          let listingData;
+          if (listingField.data?.content?.dataType === 'moveObject') {
+            const fields = listingField.data.content.fields as any;
+            listingData = fields.value?.fields;
+          }
+
           if (!listingData) continue;
 
           const itemId = field.name.value;
@@ -128,10 +139,16 @@ export default function Marketplace() {
 
             console.log('NFT object:', nftFieldObj);
 
-            let nftContent = nftFieldObj.data?.content?.fields?.value?.fields || {};
-            
-            if (!nftContent.name) {
-              nftContent = nftFieldObj.data?.content?.fields || {};
+            // FIX 3: Check dataType before accessing fields
+            let nftContent: any = {};
+            if (nftFieldObj.data?.content?.dataType === 'moveObject') {
+               const fields = nftFieldObj.data.content.fields as any;
+               nftContent = fields.value?.fields || {};
+               
+               // Fallback if not wrapped in value/fields structure
+               if (!nftContent.name) {
+                 nftContent = fields || {};
+               }
             }
             
             console.log('NFT Content Details:', {
@@ -200,7 +217,8 @@ export default function Marketplace() {
 
       signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          // FIX 4: Cast tx to any to bypass version mismatch
+          transactionBlock: tx as any,
           options: {
             showEffects: true,
             showObjectChanges: true,
@@ -245,22 +263,16 @@ export default function Marketplace() {
         <meta name="description" content="Buy and sell music NFTs on the Beats marketplace" />
       </Head>
 
-      <div className="min-h-screen text-white space-y-8" style={{
-        backgroundImage: 'linear-gradient(135deg, rgba(10, 14, 39, 0.85) 0%, rgba(20, 24, 41, 0.85) 100%), url(/marketplace.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        padding: '2rem'
-      }}>
+      <div className="min-h-screen bg-white text-gray-900 space-y-8 p-8">
         {/* Header Section */}
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Marketplace</h1>
-          <p className="text-lg text-slate-300">
-            Beats Marketplace is the heart of the Beats' 
-            project. It is created to support the project 
-            perfectly. Designed to open doors to different 
-            creators everywhere and to be the main 
-            platform where they can auction their own 
+          <p className="text-lg text-gray-700">
+            Beats Marketplace is the heart of the Beats'
+            project. It is created to support the project
+            perfectly. Designed to open doors to different
+            creators everywhere and to be the main
+            platform where they can auction their own
             creations or arts.
           </p>
         </div>
@@ -370,22 +382,22 @@ export default function Marketplace() {
         )}
 
         {/* Main Content - Active Listings */}
-        <div className="glass-dark rounded-lg p-6 border border-brand-purple/20">
+        <div className="bg-white rounded-lg p-6 border-2 border-gray-200 shadow-xl">
           {!account ? (
             <div className="text-center py-16">
               <Wallet className="w-16 h-16 text-brand-purple mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h3>
-              <p className="text-slate-400">Please connect your wallet to view and purchase NFTs</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Connect Your Wallet</h3>
+              <p className="text-gray-600">Please connect your wallet to view and purchase NFTs</p>
             </div>
           ) : (
             <>
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Active Listings</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Active Listings</h2>
                   <button
                     onClick={fetchAllListings}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 rounded-lg transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/30 text-brand-purple rounded-lg transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     <span className="text-sm font-semibold">{loading ? 'Loading...' : 'Refresh'}</span>
@@ -395,13 +407,13 @@ export default function Marketplace() {
                 {/* Search Bar */}
                 <div className="mb-6">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Search by name, ID, or description..."
-                      className="w-full glass-dark border border-brand-purple/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple/50"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-brand-purple/50"
                     />
                   </div>
                 </div>
@@ -410,34 +422,34 @@ export default function Marketplace() {
                 {loading ? (
                   <div className="text-center py-16">
                     <div className="animate-spin w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading listings...</p>
+                    <p className="text-gray-600">Loading listings...</p>
                   </div>
                 ) : filteredListings.length === 0 ? (
-                  <div className="glass-dark rounded-lg p-12 border border-brand-purple/20 text-center space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-12 border border-gray-200 text-center space-y-4">
                     <Music className="w-16 h-16 mx-auto text-brand-purple/50" />
-                    <p className="text-slate-400 text-lg">
+                    <p className="text-gray-700 text-lg">
                       {searchTerm ? 'No listings match your search.' : 'No active listings yet'}
                     </p>
-                    <p className="text-slate-500">
+                    <p className="text-gray-600">
                       {searchTerm ? 'Try a different search term.' : 'Check back later for new music NFTs'}
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <div className="mb-4 text-sm text-slate-400">
+                    <div className="mb-4 text-sm text-gray-600">
                       Showing {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {filteredListings.map((listing) => (
                         <div
                           key={listing.itemId}
                           onClick={() => setSelectedListing(listing)}
-                          className="glass-dark backdrop-blur-sm border border-brand-purple/30 rounded-xl p-5 hover:border-brand-purple/60 transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-brand-purple/20 hover:-translate-y-1"
+                          className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-brand-purple/40 transition-all cursor-pointer shadow-lg hover:shadow-2xl hover:-translate-y-1"
                         >
                           {/* Image Container */}
                           <div className="flex justify-center mb-4">
-                            <div className="relative w-full max-w-[200px] h-[200px] glass-dark rounded-lg overflow-hidden flex items-center justify-center border border-brand-purple/30">
+                            <div className="relative w-full max-w-[200px] h-[200px] bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
                               {listing.imageUrl && listing.imageUrl !== 'https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Music+NFT' ? (
                                 <img
                                   src={listing.imageUrl.startsWith('http') ? listing.imageUrl : `https://${listing.imageUrl}`}
@@ -463,17 +475,17 @@ export default function Marketplace() {
 
                           {/* NFT Info */}
                           <div className="text-center">
-                            <h3 className="text-white font-bold text-lg mb-2 truncate">{listing.name}</h3>
-                            
-                            <p className="text-slate-400 text-xs mb-2">
+                            <h3 className="text-gray-900 font-bold text-lg mb-2 truncate">{listing.name}</h3>
+
+                            <p className="text-gray-600 text-xs mb-2">
                               <strong>Item ID:</strong> {listing.itemId.slice(0, 16)}...
                             </p>
-                            
+
                             <p className="text-brand-purple font-bold text-xl mb-2 neon-text-glow">
                               {formatSui(listing.askPrice)} SUI
                             </p>
-                            
-                            <p className="text-slate-500 text-xs mb-3 line-clamp-2">
+
+                            <p className="text-gray-600 text-xs mb-3 line-clamp-2">
                               {listing.description}
                             </p>
 
@@ -482,7 +494,7 @@ export default function Marketplace() {
                                 e.stopPropagation();
                                 setSelectedListing(listing);
                               }}
-                              className="w-full px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/30 border border-brand-purple/50 text-white rounded-lg font-semibold transition-colors text-sm"
+                              className="w-full px-4 py-2 bg-brand-purple hover:bg-brand-purple/90 text-white rounded-lg font-semibold transition-colors text-sm shadow-md"
                             >
                               Buy NFT
                             </button>

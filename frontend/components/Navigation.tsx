@@ -30,11 +30,11 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-dark border-b border-brand-purple/20 glass-dark">
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8">
         {/* Top Bar */}
         <div className="py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 font-black text-lg sm:text-2xl hover:text-brand-purple transition shrink-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 font-black text-lg sm:text-2xl text-gray-900 hover:text-brand-purple transition shrink-0">
             <span className="neon-text-glow hidden sm:inline text-xl sm:text-2xl">BEATS</span>
           </Link>
 
@@ -47,8 +47,8 @@ export default function Navigation() {
                   href={tab.path}
                   className={`px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm md:text-base whitespace-nowrap transition ${
                     isActive(tab.path)
-                      ? 'bg-gradient-brand text-white shadow-brand glow-brand'
-                      : 'text-slate-400 hover:text-brand-cyan border border-brand-purple/20 hover:border-brand-purple/50'
+                      ? 'bg-gradient-brand text-white shadow-lg'
+                      : 'text-gray-600 hover:text-brand-cyan border border-gray-200 hover:border-brand-purple/50 hover:bg-gray-50'
                   }`}
                 >
                   {tab.name}
@@ -61,12 +61,12 @@ export default function Navigation() {
           <div className="hidden md:flex items-center gap-3 shrink-0">
             
             {/* NEW PERKS BUTTON - Placed next to wallet */}
-            <Link 
+            <Link
               href="/perks"
               className={`flex items-center gap-2 px-3 py-2 rounded-full border transition text-sm font-bold ${
-                isActive('/perks') 
-                  ? 'bg-brand-purple/20 border-brand-purple text-white shadow-brand glow-brand' 
-                  : 'bg-black/20 border-brand-purple/30 text-brand-cyan hover:border-brand-cyan hover:bg-brand-cyan/10'
+                isActive('/perks')
+                  ? 'bg-brand-purple/20 border-brand-purple text-brand-purple shadow-lg'
+                  : 'bg-gray-50 border-gray-200 text-brand-cyan hover:border-brand-cyan hover:bg-brand-cyan/10'
               }`}
             >
               <Gift className="w-4 h-4" />
@@ -75,7 +75,7 @@ export default function Navigation() {
 
             {/* Wallet Section */}
             {account ? (
-              <div className="flex items-center gap-2 sm:gap-3 glass-dark rounded-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border border-brand-purple/30 hover:border-brand-purple/60 transition text-xs sm:text-sm">
+              <div className="flex items-center gap-2 sm:gap-3 bg-gray-50 rounded-full px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border border-gray-200 hover:border-brand-purple/60 transition text-xs sm:text-sm">
                 <div className="w-5 sm:w-6 h-5 sm:h-6 rounded-full bg-gradient-purple-orange flex items-center justify-center text-xs font-black text-white shrink-0">
                   {account.address.slice(2, 4).toUpperCase()}
                 </div>
@@ -109,17 +109,17 @@ export default function Navigation() {
 
         {/* Mobile Menu Expanded */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-brand-purple/20">
+          <div className="md:hidden pb-4 border-t border-gray-200 bg-white">
             <div className="py-4 space-y-2">
-              
+
               {/* Added Perks to Mobile Menu manually since we removed it from tabs */}
               <Link
                 href="/perks"
                 onClick={() => setIsMenuOpen(false)}
                 className={`block px-4 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 ${
                   isActive('/perks')
-                    ? 'bg-gradient-brand text-white shadow-brand glow-brand'
-                    : 'text-brand-cyan border border-brand-purple/20 hover:border-brand-purple/50'
+                    ? 'bg-gradient-brand text-white shadow-lg'
+                    : 'text-brand-cyan border border-gray-200 hover:border-brand-purple/50 hover:bg-gray-50'
                 }`}
               >
                 <Gift className="w-4 h-4" />
@@ -134,8 +134,8 @@ export default function Navigation() {
                   onClick={() => setIsMenuOpen(false)}
                   className={`block px-4 py-2 rounded-lg font-semibold text-sm transition ${
                     isActive(tab.path)
-                      ? 'bg-gradient-brand text-white shadow-brand glow-brand'
-                      : 'text-slate-400 hover:text-brand-cyan border border-brand-purple/20 hover:border-brand-purple/50'
+                      ? 'bg-gradient-brand text-white shadow-lg'
+                      : 'text-gray-600 hover:text-brand-cyan border border-gray-200 hover:border-brand-purple/50 hover:bg-gray-50'
                   }`}
                 >
                   {tab.name}
@@ -145,8 +145,8 @@ export default function Navigation() {
 
             {/* Mobile Wallet */}
             {account ? (
-              <div className="pt-4 border-t border-brand-purple/20">
-                <div className="flex items-center gap-2 glass-dark rounded-full px-3 py-2 border border-brand-purple/30 hover:border-brand-purple/60 transition text-sm mb-3">
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-2 border border-gray-200 hover:border-brand-purple/60 transition text-sm mb-3">
                   <div className="w-5 h-5 rounded-full bg-gradient-purple-orange flex items-center justify-center text-xs font-black text-white shrink-0">
                     {account.address.slice(2, 4).toUpperCase()}
                   </div>
@@ -160,7 +160,7 @@ export default function Navigation() {
                 </div>
               </div>
             ) : (
-              <div className="pt-4 border-t border-brand-purple/20 scale-75 sm:scale-100 origin-left">
+              <div className="pt-4 border-t border-gray-200 scale-75 sm:scale-100 origin-left">
                 <ConnectButton />
               </div>
             )}
