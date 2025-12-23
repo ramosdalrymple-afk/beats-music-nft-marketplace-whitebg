@@ -236,19 +236,15 @@ textarea {
 
 /* Hero Slider Styles */
 .hero-slider-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 500px;
+  height: 100%;
   overflow: hidden;
-  border-radius: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 2px solid rgba(229, 231, 235, 1);
-}
-
-@media (min-width: 768px) {
-  .hero-slider-container {
-    height: 600px;
-  }
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
 }
 
 .hero-slider {
@@ -264,11 +260,12 @@ textarea {
   width: 100%;
   height: 100%;
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 1s ease-in-out;
   z-index: 0;
+  object-fit: cover;
 }
 
 .hero-slide.active {

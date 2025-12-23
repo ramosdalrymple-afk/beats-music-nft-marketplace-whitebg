@@ -54,62 +54,62 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-white text-gray-900">
-        {/* Hero Section */}
-        <section className="relative px-4 py-20 overflow-hidden sm:px-6 lg:px-8">
-          {/* Background gradient orbs */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-purple/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-cyan/20 rounded-full blur-3xl"></div>
-          </div>
-
-          <div className="relative z-10 max-w-6xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-brand-purple via-brand-cyan to-brand-purple bg-clip-text text-transparent">
-              About Us
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
-              Beats is an interactive NFT Art Fair with a
-              unique collection of 4,444. The project is a
-              combination of NFT with staking of NFT's
-              and Play to Earn mechanics. The Beats
-              exhibits Soul Collection of famous and
-              legendary artists around the world.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link
-                href="/beats-tap"
-                className="px-8 py-4 bg-gradient-to-r from-brand-purple to-brand-cyan text-white font-bold rounded-xl hover:shadow-neon-purple transition-all transform hover:scale-105"
-              >
-                Start Earning →
-              </Link>
-              <Link
-                href="/gallery"
-                className="px-8 py-4 border-2 border-brand-cyan text-brand-cyan font-bold rounded-xl hover:bg-brand-cyan/10 transition-all"
-              >
-                View Soul Collection
-              </Link>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              {stats.map((stat, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white p-6 rounded-xl border border-gray-200 hover:border-brand-cyan/60 hover:shadow-lg transition-all"
-                >
-                  <p className="text-gray-600 text-sm mb-2">{stat.label}</p>
-                  <p className="text-3xl font-bold text-brand-cyan mb-2">{stat.value}</p>
-                  <p className="text-brand-orange text-sm font-semibold">{stat.change} this month</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Hero Slider Section */}
-        <section className="px-4 py-20 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <main className="min-h-screen bg-white text-gray-900 -mt-20">
+        {/* Hero Section with Background Slider - Full Width */}
+        <section className="relative w-screen overflow-hidden min-h-screen left-1/2 right-1/2 -mx-[50vw] pt-20">
           <HeroSlider />
+
+          {/* About Us Content Overlay */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-b from-black/40 via-black/50 to-black/60">
+            <div className="w-full px-6 py-16 sm:px-8 lg:px-12">
+              <div className="max-w-6xl mx-auto text-center">
+                <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-brand-purple via-brand-cyan to-brand-purple bg-clip-text text-transparent drop-shadow-2xl" style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'}}>
+                  About Us
+                </h1>
+                <p className="text-xl md:text-2xl text-white mb-10 max-w-3xl mx-auto leading-relaxed font-medium" style={{textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)'}}>
+                  Beats is an interactive NFT Art Fair with a unique collection of 4,444. The project is a combination of NFT with staking of NFT's and Play to Earn mechanics. The Beats exhibits Soul Collection of famous and legendary artists around the world.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-6 justify-center mb-14">
+                  <Link
+                    href="/beats-tap"
+                    className="px-10 py-4 bg-gradient-to-r from-brand-purple to-brand-cyan text-white text-base font-bold rounded-xl hover:shadow-2xl hover:shadow-brand-purple/50 transition-all transform hover:scale-105"
+                  >
+                    Start Earning →
+                  </Link>
+                  <Link
+                    href="/gallery"
+                    className="px-10 py-4 border-2 border-white text-white text-base bg-white/20 backdrop-blur-md font-bold rounded-xl hover:bg-white/30 transition-all transform hover:scale-105"
+                  >
+                    View Soul Collection
+                  </Link>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-5xl mx-auto">
+                  {stats.map((stat, idx) => (
+                    <div
+                      key={idx}
+                      className="px-10 py-4 border-2 border-white text-white text-base bg-white/20 backdrop-blur-md font-bold rounded-xl flex flex-col items-center hover:bg-white/30 transition-all transform hover:scale-105"
+                    >
+                      <p className="text-gray-200 text-sm font-semibold mb-2 uppercase tracking-wide">{stat.label}</p>
+                      <p className="text-3xl font-bold text-brand-cyan mb-2">{stat.value}</p>
+                      <p className="text-brand-orange text-sm font-semibold">{stat.change} this month</p>
+                    </div>
+                  ))}
+                </div>
+                {/* MEXC Affiliation - strong glow, no card */}
+                <div className="flex flex-col items-center mt-32">
+                  <div className="flex items-center gap-4">
+                    <span className="text-white text-2xl sm:text-2xl font-extrabold tracking-wide uppercase" style={{fontFamily: 'Roboto, Arial, sans-serif', textShadow: '0 0 16px #fff, 0 0 32px #fff'}}>
+                      AFFILIATED WITH
+                    </span>
+                    <img src="/mexc.png" alt="MEXC Logo" className="h-20 w-auto object-contain" style={{filter: 'drop-shadow(0 0 16px #fff) drop-shadow(0 0 32px #fff)', maxWidth:'140px'}} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Features Section */}

@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { Heart, Play } from 'lucide-react';
 
 interface Character {
@@ -127,14 +128,14 @@ export default function Gallery() {
   return (
     <>
       <Head>
-        <title>Gallery - Soul Collection | Beats</title>
+        <title>Marketplace - Soul Collection | Beats</title>
         <meta name="description" content="Explore the Soul Collection characters and their unique beats" />
       </Head>
 
       <div className="min-h-screen bg-white text-gray-900 space-y-8 p-8">
         {/* Header */}
         <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Soul Collection</h1>
+          <h1 className="text-4xl md:text-5xl font-black neon-text-glow">Marketplace</h1>
           <p className="text-lg text-gray-700 max-w-2xl">
             Discover the artistic personas behind the beats. Each character represents a unique
             sound and story in the Beats ecosystem.
@@ -197,9 +198,9 @@ export default function Gallery() {
                 </div>
 
                 {/* View Button */}
-                <button className="w-full py-2 bg-gradient-purple-orange rounded-lg font-bold text-white hover:shadow-lg hover:shadow-brand-purple/50 transition">
+                <Link href="/marketplace" className="block w-full py-2 bg-gradient-purple-orange rounded-lg font-bold text-white hover:shadow-lg hover:shadow-brand-purple/50 transition text-center">
                   View Collection
-                </button>
+                </Link>
               </div>
             </div>
           ))}
